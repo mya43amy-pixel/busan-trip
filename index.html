@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=128">
-    <link rel="icon" href="icon.png?v=128">
+    <link rel="apple-touch-icon" href="icon.png?v=129">
+    <link rel="icon" href="icon.png?v=129">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -21,10 +21,6 @@
         body { font-family: 'PingFang TC', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; }
         .teal-theme { background-color: #78B7BB; }
         .teal-text { color: #78B7BB; }
-        /* 僅保留三餐專用色 */
-        .caramel-text { color: #8B5E3C; }
-        .caramel-theme { background-color: #8B5E3C; }
-        
         .active-tab { color: #78B7BB !important; font-weight: bold; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .input-round { border-radius: 12px; border: 1px solid #eef2f2; padding: 10px; outline: none; background: #f9fbfb; width: 100%; font-size: 14px; }
@@ -62,10 +58,7 @@
                                 <span class="text-[10px] font-black px-2 py-0.5 bg-teal-50 teal-text rounded-md">{{item.time}}</span>
                                 <a v-if="item.mapUrl" :href="item.mapUrl" target="_blank" @click.stop class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full text-[10px] teal-text"><i class="fas fa-map-marker-alt"></i></a>
                             </div>
-                            <h3 class="font-bold text-md mt-2" :class="item.isMeal ? 'caramel-text' : 'text-gray-800'">
-                                {{item.place}} 
-                                <span v-if="item.isMeal" class="text-[10px] opacity-60 ml-1">🍴</span>
-                            </h3>
+                            <h3 class="font-bold text-md mt-2 text-gray-800">{{item.place}}</h3>
                             <p class="text-[11px] text-gray-400 mt-1">{{item.note}}</p>
                         </div>
                         <div v-if="item.stayTime" class="text-right">
@@ -89,8 +82,8 @@
                         <p class="text-sm opacity-70 font-bold">≈ NT$ {{Math.round(totalSpent * 0.024).toLocaleString()}}</p>
                     </div>
                     <div class="flex gap-2 mb-4">
-                        <div class="flex-1 bg-white/10 p-2 rounded-xl text-center"><p class="text-[9px] opacity-70">💵 現金</p><p class="text-xs font-bold">₩ {{totalCash.toLocaleString()}}</p></div>
-                        <div class="flex-1 bg-white/10 p-2 rounded-xl text-center"><p class="text-[9px] opacity-70">💳 卡片</p><p class="text-xs font-bold">₩ {{totalCard.toLocaleString()}}</p></div>
+                        <div class="flex-1 bg-white/10 p-2 rounded-xl text-center"><p class="text-[9px] opacity-70">現金</p><p class="text-xs font-bold">₩ {{totalCash.toLocaleString()}}</p></div>
+                        <div class="flex-1 bg-white/10 p-2 rounded-xl text-center"><p class="text-[9px] opacity-70">卡片</p><p class="text-xs font-bold">₩ {{totalCard.toLocaleString()}}</p></div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 border-t border-white/20 pt-4">
                         <div v-for="member in members" :key="member" class="bg-white/5 p-2 rounded-xl border border-white/10 text-center">
@@ -140,8 +133,8 @@
                 <div class="flex justify-between mb-6"><h3 class="font-black text-lg">行程編輯 📍</h3><button v-if="isEditing" @click="deleteItem" class="text-red-400 text-xs font-bold">刪除</button></div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between bg-gray-50 p-3 rounded-2xl">
-                        <span class="text-xs font-bold text-gray-500">標記為三餐 (焦糖色)</span>
-                        <button @click="form.isMeal = !form.isMeal" :class="form.isMeal ? 'caramel-theme text-white' : 'bg-gray-200 text-gray-400'" class="px-4 py-1.5 rounded-full text-[10px] font-black transition-colors">
+                        <span class="text-xs font-bold text-gray-500">標記為三餐 (僅記錄)</span>
+                        <button @click="form.isMeal = !form.isMeal" :class="form.isMeal ? 'teal-theme text-white' : 'bg-gray-200 text-gray-400'" class="px-4 py-1.5 rounded-full text-[10px] font-black transition-colors">
                             {{ form.isMeal ? 'ON' : 'OFF' }}
                         </button>
                     </div>
