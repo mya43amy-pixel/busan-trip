@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Busan Trip - Bibi</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; }
+        .teal-theme { background-color: #78B7BB; }
+        .teal-text { color: #5a8e91; }
+        .active-tab { color: #78B7BB !important; }
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-24 relative bg-white shadow-xl">
+        
+        <header class="teal-theme p-6 text-white text-center rounded-b-3xl shadow-lg">
+            <h1 class="text-xl font-bold tracking-widest">BUSAN TRAVEL 🇰🇷</h1>
+            <div v-if="activeTab === 'itinerary'" class="mt-4 flex overflow-x-auto no-scrollbar gap-4 py-2">
+                <div v-for="d in 5" :key="d" 
+                     @click="selectedDay = d"
+                     :class="selectedDay === d ? 'bg-white text-teal-600 scale-110' : 'bg-teal-500/50'"
+                     class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300">
+                    Day{{d}}
+                </div>
+            </div>
+        </header>
+
+        <main class="p-4">
+            
+            <div v-if="activeTab === 'itinerary'" class="space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="font-bold text-gray-700">📍 當日行程</h2>
+                    <div class="text-sm teal-text bg-teal-50 px-3 py-1 rounded-full">
+                        <i class="fas fa-thermometer-half mr-1"></i>釜山 12°C ☀️
+                    </div>
+                </div>
+
+                <div v-for="(item, index) in itinerary[selectedDay]" :key="index" class="bg-white p-4 rounded-2xl card-shadow border-l-4 border-[#78B7BB]">
+                    <div class="flex justify-between">
+                        <span class="text-xs font-bold teal-text">{{item.time}}</span>
+                        <div class="flex items-center gap-2">
+                             <i class="far fa-clock text-gray-400 text-xs"></i>
+                             <span class="text-xs text-gray-500">{{item.stayTime}}{{item.stayUnit}}</span>
+                             <button @click="deleteItem(index)" class="text-red-300 ml-2"><i class="fas fa-times text-xs"></i></button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mt-1">{{item.place}}</h3>
+                    <p class="text-sm text-gray-400 mt-1">{{item.note}}</p>
+                    
+                    <div class="mt-3 flex items-center justify-between border-t pt-3 border-gray-50">
+                        <div class="flex items-center text-xs text-gray-500">
+                            <i :class="getTransportIcon(item.transport)" class="mr-1"></i>
+                            <span>預計通車 {{item.travelTime}}{{item.travelUnit}}</span>
+                        </div>
+                        <a :href="'https://map.naver.com/v5/search/' + item.place" target="_blank" class="teal-text">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <button @click="showAddModal = true" class="w-full py-4 border-2 border-dashed border-teal-200 rounded-2xl text-teal-400 mt-4">
+                    <i class="fas fa-plus mr-2"></i>新增行程
+                </button>
+            </div>
+
+            <div v-if="activeTab === 'wallet'" class="space-y-4">
+                <div class="bg-[#78B7BB]/10 p-6 rounded-3xl text-center">
+                    <p class="text-sm text-gray-500">總支出 (KRW)</p>
+                    <h2 class="text-3xl font-bold teal-text">₩ {{totalSpent.toLocaleString()}}</h2>
+                    <p class="text-xs text-gray-400 mt-1">約 TWD {{Math.round(totalSpent * 0.024).toLocaleString()}} 元</p>
+                </div>
+
+                <div class="space-y-3">
+                    <div v-for="(bill, index) in bills" :key="index" class="bg-white p-4 rounded-2xl flex justify-between items-center card-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center teal-text">
+                                <i :class="getCategoryIcon(bill.category)"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800">{{bill.store}}</p>
+                                <p class="text-xs text-gray-400">{{bill.payer}} · {{bill.method === 'cash' ? '現金' : '刷卡'}}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-700">₩ {{bill.amount.toLocaleString()}}</p>
+                            <p class="text-xs text-gray-400">NT$ {{Math.round(bill.amount * 0.024)}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="showBillModal = true" class="fixed bottom-24 right-6 w-14 h-14 teal-theme text-white rounded-full shadow-lg">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <div v-if="activeTab === 'tools'" class="space-y-6">
+                <div class="bg-white p-5 rounded-2xl card-shadow">
+                    <h3 class="font-bold mb-3 teal-text"><i class="fas fa-calculator mr-2"></i>匯率即時換算</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 border-b pb-2">
+                            <span class="text-gray-400">KRW</span>
+                            <input type="number" v-model="calcKrw" class="flex-1 outline-none text-right font-bold" placeholder="輸入韓元">
+                        </div>
+                        <div class="flex items-center gap-2 text-teal-600">
+                            <span class="text-sm">TWD (約)</span>
+                            <span class="flex-1 text-right font-bold text-xl">NT$ {{Math.round(calcKrw * 0.024).toLocaleString()}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl card-shadow">
+                    <h3 class="font-bold mb-3 teal-text"><i class="fas fa-shopping-bag mr-2"></i>待買清單</h3>
+                    <div v-for="(item, idx) in shoppingList" :key="idx" class="border-b border-gray-50 py-3 last:border-0">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-gray-800">{{item.name}} <span class="text-xs text-teal-500 font-normal ml-2" v-if="item.model">{{item.model}}</span></p>
+                                <p class="text-xs text-gray-400">地點：{{item.store}}</p>
+                                <p class="text-xs text-gray-400" v-if="item.note">{{item.note}}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold">₩ {{item.price}}</p>
+                                <button class="text-xs text-gray-300 border px-2 rounded mt-1"><i class="fas fa-camera"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="addShopping" class="w-full py-2 text-xs teal-text mt-3 bg-teal-50 rounded-lg">+ 新增品項</button>
+                </div>
+
+                <button @click="exportToImg" class="w-full py-4 teal-theme text-white rounded-2xl font-bold shadow-md">
+                    <i class="fas fa-file-export mr-2"></i>匯出行程為圖片
+                </button>
+            </div>
+        </main>
+
+        <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+            <div class="bg-white w-full rounded-3xl p-6">
+                <h3 class="font-bold mb-4">新增行程</h3>
+                <input v-model="newItem.time" type="time" class="w-full mb-3 p-2 border rounded">
+                <input v-model="newItem.place" placeholder="地點名稱" class="w-full mb-3 p-2 border rounded">
+                <input v-model="newItem.note" placeholder="備註 (選填)" class="w-full mb-3 p-2 border rounded">
+                <div class="flex gap-2 mb-3">
+                    <select v-model="newItem.transport" class="p-2 border rounded">
+                        <option value="walk">🚶</option>
+                        <option value="car">🚗</option>
+                        <option value="bus">🚌</option>
+                    </select>
+                    <input v-model="newItem.travelTime" placeholder="時間" class="flex-1 p-2 border rounded">
+                    <select v-model="newItem.travelUnit" class="p-2 border rounded">
+                        <option value="m">m</option>
+                        <option value="h">h</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <input v-model="newItem.stayTime" placeholder="待多久" class="flex-1 p-2 border rounded">
+                    <select v-model="newItem.stayUnit" class="p-2 border rounded">
+                        <option value="m">m</option>
+                        <option value="h">h</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <button @click="showAddModal = false" class="flex-1 py-3 bg-gray-100 rounded-xl">取消</button>
+                    <button @click="saveItem" class="flex-1 py-3 teal-theme text-white rounded-xl">儲存</button>
+                </div>
+            </div>
+        </div>
+
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-100 flex justify-around py-4 rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+            <button @click="activeTab = 'itinerary'" :class="{'active-tab': activeTab === 'itinerary'}" class="flex flex-col items-center text-gray-400">
+                <i class="fas fa-calendar-alt text-xl"></i>
+                <span class="text-[10px] mt-1">行程</span>
+            </button>
+            <button @click="activeTab = 'wallet'" :class="{'active-tab': activeTab === 'wallet'}" class="flex flex-col items-center text-gray-400">
+                <i class="fas fa-wallet text-xl"></i>
+                <span class="text-[10px] mt-1">記帳</span>
+            </button>
+            <button @click="activeTab = 'tools'" :class="{'active-tab': activeTab === 'tools'}" class="flex flex-col items-center text-gray-400">
+                <i class="fas fa-th-large text-xl"></i>
+                <span class="text-[10px] mt-1">功能</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    activeTab: 'itinerary',
+                    selectedDay: 1,
+                    showAddModal: false,
+                    showBillModal: false,
+                    calcKrw: 0,
+                    newItem: { time: '', place: '', note: '', transport: 'walk', travelTime: '', travelUnit: 'm', stayTime: '', stayUnit: 'h' },
+                    itinerary: JSON.parse(localStorage.getItem('busan_itinerary')) || { 1: [], 2: [], 3: [], 4: [], 5: [] },
+                    bills: JSON.parse(localStorage.getItem('busan_bills')) || [],
+                    shoppingList: JSON.parse(localStorage.getItem('busan_shopping')) || [
+                        { name: 'Olive Young 護手霜', store: '南浦洞', note: '買給姐姐', price: 12000, model: '藍色限定' }
+                    ]
+                }
+            },
+            computed: {
+                totalSpent() {
+                    return this.bills.reduce((sum, item) => sum + Number(item.amount), 0);
+                }
+            },
+            watch: {
+                itinerary: { handler(val) { localStorage.setItem('busan_itinerary', JSON.stringify(val)) }, deep: true },
+                bills: { handler(val) { localStorage.setItem('busan_bills', JSON.stringify(val)) }, deep: true },
+                shoppingList: { handler(val) { localStorage.setItem('busan_shopping', JSON.stringify(val)) }, deep: true }
+            },
+            methods: {
+                getTransportIcon(t) {
+                    return t === 'walk' ? 'fas fa-walking' : (t === 'car' ? 'fas fa-car' : 'fas fa-bus');
+                },
+                getCategoryIcon(c) {
+                    const icons = { food: 'fas fa-utensils', shop: 'fas fa-shopping-bag', other: 'fas fa-ellipsis-h' };
+                    return icons[c] || icons.other;
+                },
+                saveItem() {
+                    this.itinerary[this.selectedDay].push({...this.newItem});
+                    this.showAddModal = false;
+                    this.newItem = { time: '', place: '', note: '', transport: 'walk', travelTime: '', travelUnit: 'm', stayTime: '', stayUnit: 'h' };
+                },
+                deleteItem(index) {
+                    this.itinerary[this.selectedDay].splice(index, 1);
+                },
+                addShopping() {
+                    const name = prompt('品名?');
+                    if(name) this.shoppingList.push({ name, store: '', note: '', price: 0, model: '' });
+                },
+                exportToImg() {
+                    alert('截圖功能需整合 html2canvas 庫，目前可先使用手機內建截圖功能，畫面已針對長圖優化喔！📸');
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
