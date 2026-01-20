@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=125">
-    <link rel="icon" href="icon.png?v=125">
+    <link rel="apple-touch-icon" href="icon.png?v=127">
+    <link rel="icon" href="icon.png?v=127">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -21,6 +21,11 @@
         body { font-family: 'PingFang TC', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; }
         .teal-theme { background-color: #78B7BB; }
         .teal-text { color: #78B7BB; }
+        /* 溫潤焦糖色系：比剛才淺，但很有存在感 */
+        .caramel-theme { background-color: #8B5E3C; }
+        .caramel-text { color: #8B5E3C; }
+        .caramel-bg-light { background-color: #F5EBE0; }
+        
         .active-tab { color: #78B7BB !important; font-weight: bold; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .input-round { border-radius: 12px; border: 1px solid #eef2f2; padding: 10px; outline: none; background: #f9fbfb; width: 100%; font-size: 14px; }
@@ -28,8 +33,6 @@
         [v-cloak] { display: none; }
         .animate-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        /* 換成暖木灰褐：與青綠色超搭，質感提升 */
-        .meal-color { color: #8E867E !important; }
     </style>
 </head>
 <body>
@@ -57,10 +60,10 @@
                     <div @click="openEditModal(index)" class="p-4 card-pop border border-gray-50 flex justify-between items-start animate-up">
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-black px-2 py-0.5 bg-teal-50 teal-text rounded-md">{{item.time}}</span>
-                                <a v-if="item.mapUrl" :href="item.mapUrl" target="_blank" @click.stop class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full text-[10px] teal-text"><i class="fas fa-map-marker-alt"></i></a>
+                                <span class="text-[10px] font-black px-2 py-0.5 caramel-bg-light caramel-text rounded-md">{{item.time}}</span>
+                                <a v-if="item.mapUrl" :href="item.mapUrl" target="_blank" @click.stop class="w-6 h-6 flex items-center justify-center bg-gray-50 rounded-full text-[10px] caramel-text"><i class="fas fa-map-marker-alt"></i></a>
                             </div>
-                            <h3 class="font-bold text-md mt-2" :class="item.isMeal ? 'meal-color' : 'text-gray-800'">
+                            <h3 class="font-bold text-md mt-2" :class="item.isMeal ? 'caramel-text' : 'text-gray-800'">
                                 {{item.place}} 
                                 <span v-if="item.isMeal" class="text-[10px] opacity-60 ml-1">🍴</span>
                             </h3>
@@ -138,17 +141,17 @@
                 <div class="flex justify-between mb-6"><h3 class="font-black text-lg">行程編輯 📍</h3><button v-if="isEditing" @click="deleteItem" class="text-red-400 text-xs font-bold">刪除</button></div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between bg-gray-50 p-3 rounded-2xl">
-                        <span class="text-xs font-bold text-gray-500">標記為三餐 (暖木灰褐)</span>
-                        <button @click="form.isMeal = !form.isMeal" :class="form.isMeal ? 'bg-[#8E867E] text-white' : 'bg-gray-200 text-gray-400'" class="px-4 py-1.5 rounded-full text-[10px] font-black transition-colors">
+                        <span class="text-xs font-bold text-gray-500">標記為三餐 (焦糖色)</span>
+                        <button @click="form.isMeal = !form.isMeal" :class="form.isMeal ? 'caramel-theme text-white' : 'bg-gray-200 text-gray-400'" class="px-4 py-1.5 rounded-full text-[10px] font-black transition-colors">
                             {{ form.isMeal ? 'ON' : 'OFF' }}
                         </button>
                     </div>
                     <input v-model="form.place" placeholder="地點名稱" class="input-round font-bold">
-                    <input v-model="form.time" type="time" class="input-round font-black text-teal-500">
+                    <input v-model="form.time" type="time" class="input-round font-black caramel-text">
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-[10px] font-bold text-gray-400 mb-1 block">預計通車</label>
                             <div class="flex gap-1 mb-2">
-                                <button v-for="t in ['walk','car','bus']" @click="form.transitType = t" :class="form.transitType === t ? 'teal-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs"><i :class="getTransitIcon(t)"></i></button>
+                                <button v-for="t in ['walk','car','bus']" @click="form.transitType = t" :class="form.transitType === t ? 'caramel-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs"><i :class="getTransitIcon(t)"></i></button>
                             </div>
                             <div class="flex gap-1"><input v-model="form.transitTime" type="number" class="input-round p-2 text-xs flex-1" placeholder="數字"><select v-model="form.transitUnit" class="input-round p-2 text-xs w-14"><option value="m">m</option><option value="h">h</option></select></div>
                         </div>
@@ -159,7 +162,7 @@
                     <input v-model="form.mapUrl" placeholder="地圖連結" class="input-round text-xs">
                     <textarea v-model="form.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea>
                 </div>
-                <div class="flex gap-4 mt-8"><button @click="showModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
+                <div class="flex gap-4 mt-8"><button @click="showModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveForm" class="flex-[2] py-4 caramel-theme text-white rounded-2xl font-black">儲存</button></div>
             </div>
         </div>
 
