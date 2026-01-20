@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Busan Trip - Bibi</title>
+    <title>Busan 2026</title>
+    <meta name="apple-mobile-web-app-title" content="Busan 2026">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" href="icon.png">
+
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body { font-family: 'PingFang TC', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; }
         .teal-theme { background-color: #78B7BB; }
@@ -26,14 +33,14 @@
 <body>
     <div id="app" v-cloak class="max-w-md mx-auto min-h-screen pb-28 relative bg-white shadow-2xl">
         
-        <header class="teal-theme pt-8 pb-5 px-4 text-white rounded-b-[40px] shadow-lg">
-            <h1 class="text-center text-lg font-bold tracking-widest mb-4">BUSAN 2/17-2/21 ⚓️</h1>
-            <div class="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar px-2">
+        <header class="teal-theme pt-6 pb-4 px-4 text-white rounded-b-[35px] shadow-lg">
+            <h1 class="text-center text-sm font-bold tracking-[0.2em] mb-4 opacity-90 uppercase">Busan 2/17-2/21 ⚓️</h1>
+            <div class="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar px-1">
                 <div v-for="(d, i) in dateConfig" :key="i" @click="selectedDay = (i+1)" 
-                     :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB]' : 'bg-white/20 text-white'" 
-                     class="min-w-[50px] h-12 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm">
-                    <span class="text-[10px] font-bold opacity-80 leading-none mb-1">{{d.date}}</span>
-                    <span class="text-sm font-black leading-none">{{d.day}}</span>
+                     :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB] shadow-md' : 'bg-white/20 text-white'" 
+                     class="min-w-[65px] h-14 rounded-[18px] flex flex-col items-center justify-center cursor-pointer transition-all">
+                    <span class="text-[10px] font-bold opacity-80 leading-tight mb-0.5">{{d.date}}</span>
+                    <span class="text-base font-black leading-tight">{{d.day}}</span>
                 </div>
             </div>
         </header>
@@ -201,7 +208,7 @@
                         <input v-model="shopForm.name" placeholder="名稱" class="input-round flex-1 font-bold">
                     </div>
                     <input v-model.number="shopForm.price" type="number" placeholder="₩ 預估價" class="input-round font-black">
-                    <textarea v-model="shopForm.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea>
+                    <textarea v-model="shopForm.note" placeholder="備註 (例如：幫誰買、哪家店)..." class="input-round text-xs" rows="2"></textarea>
                 </div>
                 <div class="flex gap-4 mt-6"><button @click="showShopModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
             </div>
