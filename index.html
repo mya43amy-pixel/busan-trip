@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=140">
-    <link rel="icon" href="icon.png?v=140">
+    <link rel="apple-touch-icon" href="icon.png?v=141">
+    <link rel="icon" href="icon.png?v=141">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -18,7 +18,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { font-family: 'PingFang TC', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'PingFang TC', sans-serif; 
+            background-color: #f8fbfb; 
+            -webkit-tap-highlight-color: transparent; 
+            letter-spacing: 0.02em; /* 稍微調寬字距 */
+            line-height: 1.6;      /* 增加整體行高 */
+        }
         .teal-theme { background-color: #78B7BB; }
         .teal-text { color: #78B7BB; }
         .active-tab { color: #78B7BB !important; font-weight: bold; }
@@ -76,7 +82,7 @@
                                 <a v-if="item.mapUrl" :href="item.mapUrl" target="_blank" @click.stop class="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full text-xs teal-text no-export"><i class="fas fa-map-marker-alt"></i></a>
                             </div>
                             <h3 class="font-bold text-lg mt-2.5 text-gray-800">{{item.place}}</h3>
-                            <p class="text-[13px] text-gray-400 mt-1.5 leading-relaxed">{{item.note}}</p>
+                            <p class="text-[13px] text-gray-400 mt-1.5 leading-relaxed whitespace-pre-wrap">{{item.note}}</p>
                         </div>
                         <div v-if="item.stayTime" class="text-right">
                             <div class="text-[11px] bg-gray-50 px-2.5 py-1.5 rounded-lg text-gray-400 font-bold flex items-center gap-1.5"><i class="far fa-clock"></i> {{item.stayTime}}{{item.stayUnit}}</div>
@@ -175,7 +181,7 @@
                         <div><label class="text-[10px] font-bold text-gray-400 mb-1 block">預計待多久 🕒</label><div class="flex gap-1 mt-8"><input v-model="form.stayTime" type="number" class="input-round p-2 text-xs flex-1" placeholder="數字"><select v-model="form.stayUnit" class="input-round p-2 text-xs w-14"><option value="m">m</option><option value="h">h</option></select></div></div>
                     </div>
                     <input v-model="form.mapUrl" placeholder="地圖連結" class="input-round text-xs">
-                    <textarea v-model="form.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea>
+                    <textarea v-model="form.note" placeholder="備註 (支援換行)..." class="input-round text-xs" rows="3"></textarea>
                 </div>
                 <div class="flex gap-4 mt-8"><button @click="showModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
             </div>
@@ -258,21 +264,12 @@
                     const icons = { walk: 'fas fa-walking', car: 'fas fa-taxi', bus: 'fas fa-bus', plane: 'fas fa-plane', subway: 'fas fa-subway' }; 
                     return icons[type] || 'fas fa-walking'; 
                 },
-                // 多選處理邏輯
-                getTransitArray(type) {
-                    if (!type) return [];
-                    return type.split(',');
-                },
-                isTransitSelected(type) {
-                    return this.getTransitArray(this.form.transitType).includes(type);
-                },
+                getTransitArray(type) { if (!type) return []; return type.split(','); },
+                isTransitSelected(type) { return this.getTransitArray(this.form.transitType).includes(type); },
                 toggleTransit(type) {
                     let arr = this.getTransitArray(this.form.transitType);
-                    if (arr.includes(type)) {
-                        arr = arr.filter(t => t !== type);
-                    } else {
-                        arr.push(type);
-                    }
+                    if (arr.includes(type)) arr = arr.filter(t => t !== type);
+                    else arr.push(type);
                     this.form.transitType = arr.join(',');
                 },
                 getMemberTotal(name) { return (this.bills || []).filter(b => b.payer === name).reduce((sum, b) => sum + (Number(b.amount) || 0), 0); },
