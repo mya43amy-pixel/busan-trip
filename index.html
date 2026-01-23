@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=138">
-    <link rel="icon" href="icon.png?v=138">
+    <link rel="apple-touch-icon" href="icon.png?v=140">
+    <link rel="icon" href="icon.png?v=140">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -29,6 +29,7 @@
         .animate-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
+        /* 匯出專用樣式 */
         .export-mode { width: 375px !important; padding: 20px !important; background: #f8fbfb !important; }
         .export-mode .no-export { display: none !important; }
         .export-mode .card-pop { box-shadow: none !important; border: 1px solid #eee !important; margin-bottom: 10px !important; }
@@ -63,7 +64,10 @@
 
                 <div v-for="(item, index) in (itinerary[selectedDay] || [])" :key="index" class="relative">
                     <div v-if="item.transitTime" class="flex items-center gap-2 ml-8 mb-2 text-[13px] text-gray-400 font-bold">
-                        <i :class="getTransitIcon(item.transitType)"></i><span>{{item.transitTime}}{{item.transitUnit}}</span>
+                        <span class="flex gap-1">
+                            <i v-for="t in getTransitArray(item.transitType)" :key="t" :class="getTransitIcon(t)"></i>
+                        </span>
+                        <span>{{item.transitTime}}{{item.transitUnit}}</span>
                     </div>
                     <div @click="openEditModal(index)" class="p-5 card-pop border border-gray-50 flex justify-between items-start animate-up">
                         <div class="flex-1">
@@ -160,9 +164,11 @@
                     <input v-model="form.time" type="time" class="input-round font-black teal-text">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 mb-1 block">預計通車</label>
+                            <label class="text-[10px] font-bold text-gray-400 mb-1 block">預計通車 (可多選)</label>
                             <div class="flex gap-1 mb-2">
-                                <button v-for="t in ['walk','car','bus','plane']" @click="form.transitType = t" :class="form.transitType === t ? 'teal-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs"><i :class="getTransitIcon(t)"></i></button>
+                                <button v-for="t in ['walk','car','bus','subway','plane']" :key="t" @click="toggleTransit(t)" :class="isTransitSelected(t) ? 'teal-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs">
+                                    <i :class="getTransitIcon(t)"></i>
+                                </button>
                             </div>
                             <div class="flex gap-1"><input v-model="form.transitTime" type="number" class="input-round p-2 text-xs flex-1" placeholder="數字"><select v-model="form.transitUnit" class="input-round p-2 text-xs w-14"><option value="m">m</option><option value="h">h</option></select></div>
                         </div>
@@ -217,7 +223,7 @@
                     tempSummary: '', isEditing: false, isEditBill: false, isEditShop: false, isEditNote: false, editIndex: null, memberInput: '',
                     members: ['Bibi'], collapsed: { '食物': true, '購物': true, '其他': true },
                     dateConfig: [{date: '2/17', day: '二'}, {date: '2/18', day: '三'}, {date: '2/19', day: '四'}, {date: '2/20', day: '五'}, {date: '2/21', day: '六'}],
-                    form: { time: '09:00', place: '', note: '', transitType: 'walk', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
+                    form: { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
                     billForm: { itemName: '', amount: '', method: 'card', payer: 'Bibi', category: '食物', note: '' },
                     shopForm: { name: '', price: '', category: '購物', imgBase64: '', note: '' },
                     noteForm: { content: '', tag: '' },
@@ -249,12 +255,29 @@
                 updateTwd() { this.calcTwd = Math.round(this.calcKrw * 0.024); },
                 updateKrw() { this.calcKrw = Math.round(this.calcTwd / 0.024); },
                 getTransitIcon(type) { 
-                    const icons = { walk: 'fas fa-walking', car: 'fas fa-taxi', bus: 'fas fa-bus', plane: 'fas fa-plane' }; 
+                    const icons = { walk: 'fas fa-walking', car: 'fas fa-taxi', bus: 'fas fa-bus', plane: 'fas fa-plane', subway: 'fas fa-subway' }; 
                     return icons[type] || 'fas fa-walking'; 
+                },
+                // 多選處理邏輯
+                getTransitArray(type) {
+                    if (!type) return [];
+                    return type.split(',');
+                },
+                isTransitSelected(type) {
+                    return this.getTransitArray(this.form.transitType).includes(type);
+                },
+                toggleTransit(type) {
+                    let arr = this.getTransitArray(this.form.transitType);
+                    if (arr.includes(type)) {
+                        arr = arr.filter(t => t !== type);
+                    } else {
+                        arr.push(type);
+                    }
+                    this.form.transitType = arr.join(',');
                 },
                 getMemberTotal(name) { return (this.bills || []).filter(b => b.payer === name).reduce((sum, b) => sum + (Number(b.amount) || 0), 0); },
                 getCatItems(cat) { return this.shoppingList.filter(i => i.category === cat); },
-                openAddModal() { this.isEditing = false; this.form = { time: '09:00', place: '', note: '', transitType: 'walk', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' }; this.showModal = true; },
+                openAddModal() { this.isEditing = false; this.form = { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' }; this.showModal = true; },
                 openEditModal(idx) { this.isEditing = true; this.editIndex = idx; this.form = { ...this.itinerary[this.selectedDay][idx] }; this.showModal = true; },
                 saveForm() {
                     if(!this.itinerary[this.selectedDay]) this.itinerary[this.selectedDay] = [];
