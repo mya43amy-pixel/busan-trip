@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=142">
-    <link rel="icon" href="icon.png?v=142">
+    <link rel="apple-touch-icon" href="icon.png?v=143">
+    <link rel="icon" href="icon.png?v=143">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -27,12 +27,11 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .input-round { border-radius: 12px; border: 1px solid #eef2f2; padding: 10px; outline: none; background: #f9fbfb; width: 100%; font-size: 14px; }
         .card-pop { border-radius: 20px; background: white; box-shadow: 0 4px 12px rgba(120, 183, 187, 0.08); transition: transform 0.2s; }
-        .card-bought { opacity: 0.6; grayscale: 0.5; }
+        .card-bought { opacity: 0.6; filter: grayscale(0.5); }
         [v-cloak] { display: none; }
         .animate-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* 匯出專用樣式 */
         .export-mode { width: 375px !important; padding: 20px !important; background: #f8fbfb !important; }
         .export-mode .no-export { display: none !important; }
         .export-mode .card-pop { box-shadow: none !important; border: 1px solid #eee !important; margin-bottom: 10px !important; }
@@ -128,7 +127,7 @@
                 </div>
                 
                 <div class="space-y-4">
-                    <div v-for="cat in ['食物', '購物', '其他']" :key="cat" class="space-y-3">
+                    <div v-for="cat in ['食物', '購物', '美妝', '其他']" :key="cat" class="space-y-3">
                         <div @click="collapsed[cat] = !collapsed[cat]" class="flex justify-between items-center px-2 cursor-pointer">
                             <h3 class="font-black text-gray-700 text-sm">{{cat}} ({{getCatItems(cat).length}})</h3>
                             <i class="fas fa-chevron-down text-xs text-gray-300 transition-transform" :class="{'rotate-180': collapsed[cat]}"></i>
@@ -182,9 +181,7 @@
                         <div>
                             <label class="text-[10px] font-bold text-gray-400 mb-1 block">預計通車 (可多選)</label>
                             <div class="flex gap-1 mb-2">
-                                <button v-for="t in ['walk','car','bus','subway','plane']" :key="t" @click="toggleTransit(t)" :class="isTransitSelected(t) ? 'teal-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs">
-                                    <i :class="getTransitIcon(t)"></i>
-                                </button>
+                                <button v-for="t in ['walk','car','bus','subway','plane']" :key="t" @click="toggleTransit(t)" :class="isTransitSelected(t) ? 'teal-theme text-white' : 'bg-gray-100 text-gray-400'" class="flex-1 py-2 rounded-lg text-xs"><i :class="getTransitIcon(t)"></i></button>
                             </div>
                             <div class="flex gap-1"><input v-model="form.transitTime" type="number" class="input-round p-2 text-xs flex-1" placeholder="數字"><select v-model="form.transitUnit" class="input-round p-2 text-xs w-14"><option value="m">m</option><option value="h">h</option></select></div>
                         </div>
@@ -198,11 +195,11 @@
         </div>
 
         <div v-if="showBillModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
-            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-6"><h3 class="font-black text-lg">記帳 💸</h3><button v-if="isEditBill" @click="deleteBill" class="text-red-400 text-xs font-bold">刪除</button></div><div class="space-y-4"><input v-model="billForm.itemName" placeholder="項目" class="input-round font-bold"><div class="flex gap-2"><input v-model.number="billForm.amount" type="number" placeholder="₩ 韓元" class="input-round font-black flex-1"><select v-model="billForm.payer" class="input-round w-28 font-bold"><option v-for="m in members" :value="m">{{m}}</option></select></div><div class="flex gap-2"><select v-model="billForm.category" class="input-round flex-1 font-bold"><option value="食物">食物</option><option value="購物">購物</option><option value="其他">其他</option></select><select v-model="billForm.method" class="input-round flex-1 font-bold"><option value="card">💳 刷卡</option><option value="cash">💵 現金</option></select></div><textarea v-model="billForm.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea></div><div class="flex gap-4 mt-8"><button @click="showBillModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveBill" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
+            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-6"><h3 class="font-black text-lg">記帳 💸</h3><button v-if="isEditBill" @click="deleteBill" class="text-red-400 text-xs font-bold">刪除</button></div><div class="space-y-4"><input v-model="billForm.itemName" placeholder="項目" class="input-round font-bold"><div class="flex gap-2"><input v-model.number="billForm.amount" type="number" placeholder="₩ 韓元" class="input-round font-black flex-1"><select v-model="billForm.payer" class="input-round w-28 font-bold"><option v-for="m in members" :value="m">{{m}}</option></select></div><div class="flex gap-2"><select v-model="billForm.category" class="input-round flex-1 font-bold"><option value="食物">食物</option><option value="購物">購物</option><option value="美妝">美妝</option><option value="其他">其他</option></select><select v-model="billForm.method" class="input-round flex-1 font-bold"><option value="card">💳 刷卡</option><option value="cash">💵 現金</option></select></div><textarea v-model="billForm.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea></div><div class="flex gap-4 mt-8"><button @click="showBillModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveBill" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
         </div>
 
         <div v-if="showShopModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
-            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-4"><h3 class="font-black">待買 🛍️</h3><button v-if="isEditShop" @click="deleteShopItem" class="text-red-400 text-xs font-bold">刪除</button></div><div class="space-y-4"><div @click="$refs.fileInput.click()" class="w-full h-32 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden mb-2"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><p v-else class="text-xs text-gray-300 font-bold">上傳照片</p></div><input type="file" ref="fileInput" class="hidden" @change="handleFileUpload"><div class="flex gap-2"><select v-model="shopForm.category" class="input-round w-28 font-bold"><option value="食物">食物</option><option value="購物">購物</option><option value="其他">其他</option></select><input v-model="shopForm.name" placeholder="名稱" class="input-round flex-1 font-bold"></div><input v-model.number="shopForm.price" type="number" placeholder="₩ 預估價" class="input-round font-black"><textarea v-model="shopForm.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea></div><div class="flex gap-4 mt-6"><button @click="showShopModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
+            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-4"><h3 class="font-black">待買 🛍️</h3><button v-if="isEditShop" @click="deleteShopItem" class="text-red-400 text-xs font-bold">刪除</button></div><div class="space-y-4"><div @click="$refs.fileInput.click()" class="w-full h-32 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden mb-2"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><p v-else class="text-xs text-gray-300 font-bold">上傳照片</p></div><input type="file" ref="fileInput" class="hidden" @change="handleFileUpload"><div class="flex gap-2"><select v-model="shopForm.category" class="input-round w-28 font-bold"><option value="食物">食物</option><option value="購物">購物</option><option value="美妝">美妝</option><option value="其他">其他</option></select><input v-model="shopForm.name" placeholder="名稱" class="input-round flex-1 font-bold"></div><input v-model.number="shopForm.price" type="number" placeholder="₩ 預估價" class="input-round font-black"><textarea v-model="shopForm.note" placeholder="備註..." class="input-round text-xs" rows="2"></textarea></div><div class="flex gap-4 mt-6"><button @click="showShopModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
         </div>
 
         <div v-if="showNoteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
@@ -238,7 +235,7 @@
                     activeTab: 'itinerary', selectedDay: 1, calcKrw: null, calcTwd: null,
                     showModal: false, showBillModal: false, showShopModal: false, showNoteModal: false, showMemberModal: false, showSummaryModal: false,
                     tempSummary: '', isEditing: false, isEditBill: false, isEditShop: false, isEditNote: false, editIndex: null, memberInput: '',
-                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '其他': true },
+                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '其他': true },
                     dateConfig: [{date: '2/17', day: '二'}, {date: '2/18', day: '三'}, {date: '2/19', day: '四'}, {date: '2/20', day: '五'}, {date: '2/21', day: '六'}],
                     form: { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
                     billForm: { itemName: '', amount: '', method: 'card', payer: 'Bibi', category: '食物', note: '' },
@@ -317,14 +314,9 @@
                 editShopItem(id) { this.isEditShop = true; this.editIndex = this.shoppingList.findIndex(i => i.id === id); this.shopForm = { ...this.shoppingList[this.editIndex] }; this.showShopModal = true; },
                 saveShopItem() { 
                     if(!this.shopForm.name) return; 
-                    if(this.isEditShop) {
-                        this.shoppingList[this.editIndex] = { ...this.shopForm };
-                    } else {
-                        const newId = Date.now();
-                        this.shoppingList.push({ ...this.shopForm, id: newId });
-                    }
-                    this.sortShoppingList();
-                    this.sync(); this.showShopModal = false; 
+                    if(this.isEditShop) { this.shoppingList[this.editIndex] = { ...this.shopForm }; } 
+                    else { this.shoppingList.push({ ...this.shopForm, id: Date.now() }); }
+                    this.sortShoppingList(); this.sync(); this.showShopModal = false; 
                 },
                 deleteShopItem() { if(confirm('確定刪除？')) { this.shoppingList.splice(this.editIndex, 1); this.sync(); this.showShopModal = false; } },
                 handleFileUpload(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (f) => { this.shopForm.imgBase64 = f.target.result; }; reader.readAsDataURL(file); },
