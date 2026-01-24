@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=143">
-    <link rel="icon" href="icon.png?v=143">
+    <link rel="apple-touch-icon" href="icon.png?v=144">
+    <link rel="icon" href="icon.png?v=144">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -142,9 +142,8 @@
                                         </div>
                                         <div class="p-3">
                                             <h4 class="font-bold text-gray-800 text-xs truncate">{{element.name}}</h4>
-                                            <p class="teal-text font-black text-xs mt-1">
-                                                {{ (element.price && element.price > 0) ? '₩ ' + element.price.toLocaleString() : '' }}
-                                            </p>
+                                            <p v-if="element.price && element.price > 0" class="teal-text font-black text-xs mt-1">₩ {{element.price.toLocaleString()}}</p>
+                                            <p v-if="element.note" class="text-[10px] text-gray-400 mt-1 leading-tight whitespace-pre-wrap">{{element.note}}</p>
                                         </div>
                                         <button @click.stop="toggleBought(element.id)" class="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all" :class="element.isBought ? 'bg-teal-500 text-white' : 'bg-white/80 text-gray-300'">
                                             <i class="fas" :class="element.isBought ? 'fa-check' : 'fa-circle'"></i>
