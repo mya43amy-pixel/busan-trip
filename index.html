@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>busan</title>
-    <meta name="apple-mobile-web-app-title" content="Busan 2026">
+    <title>2026 BUSAN</title>
+    <meta name="apple-mobile-web-app-title" content="2026 BUSAN">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
@@ -17,7 +17,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            background-color: #f8fbfb; 
+            -webkit-tap-highlight-color: transparent; 
+            letter-spacing: 0.02em; /* 增加字體寬度，減少壓迫感 */
+            line-height: 1.6; /* 調整行高讓視覺更放鬆 */
+        }
         .teal-theme { background-color: #78B7BB; }
         .teal-text { color: #78B7BB; }
         .active-tab { color: #78B7BB !important; font-weight: bold; }
@@ -30,19 +36,23 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .memo-link { color: #78B7BB; text-decoration: underline; word-break: break-all; font-weight: bold; }
         .currency-input { background: transparent; border: none; text-align: right; width: 100%; font-weight: bold; outline: none; }
+        
+        /* 加大日期字體讓視覺更和諧 */
+        .date-btn-date { font-size: 11px; font-weight: 800; }
+        .date-btn-day { font-size: 18px; font-weight: 900; }
     </style>
 </head>
 <body>
     <div id="app" v-cloak class="max-w-md mx-auto min-h-screen pb-28 relative bg-white shadow-2xl">
         
         <header class="teal-theme pt-6 pb-4 px-4 text-white rounded-b-[35px] shadow-lg">
-            <h1 class="text-center text-sm font-bold tracking-[0.2em] mb-4 opacity-90 uppercase">Busan 2/17-2/21 ⚓️</h1>
+            <h1 class="text-center text-base font-black tracking-[0.3em] mb-4 uppercase">2026 BUSAN ⚓️</h1>
             <div class="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar px-1">
                 <div v-for="(d, i) in dateConfig" :key="i" @click="selectedDay = (i+1)" 
                      :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB] shadow-md' : 'bg-white/20 text-white'" 
-                     class="min-w-[65px] h-14 rounded-[18px] flex flex-col items-center justify-center cursor-pointer transition-all">
-                    <span class="text-[10px] font-bold opacity-80 mb-0.5">{{d.date}}</span>
-                    <span class="text-base font-black">{{d.day}}</span>
+                     class="min-w-[65px] h-16 rounded-[20px] flex flex-col items-center justify-center cursor-pointer transition-all">
+                    <span class="date-btn-date opacity-90 mb-0.5">{{d.date}}</span>
+                    <span class="date-btn-day">{{d.day}}</span>
                 </div>
             </div>
         </header>
