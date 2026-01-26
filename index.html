@@ -34,6 +34,9 @@
         .date-btn-text { font-size: 15px; font-weight: 800; }
         .memo-item { background: white; border-radius: 18px; padding: 15px; border: 1px solid #f0f4f4; margin-bottom: 10px; }
         .chart-container { position: relative; height: 180px; width: 100%; }
+        /* 匯出時隱藏不必要的東西 */
+        .export-mode #header-area { border-radius: 0; }
+        .export-mode nav, .export-mode .export-btn, .export-mode button { display: none !important; }
     </style>
 </head>
 <body>
@@ -76,6 +79,10 @@
                     </div>
                 </div>
                 <button @click="openAddModal" class="w-full py-4 border-2 border-dashed border-teal-100 rounded-[24px] text-teal-200 font-bold">+ 新增行程</button>
+                
+                <div class="text-center pt-8">
+                    <button @click="exportImage" class="export-btn text-[10px] text-gray-300 font-bold tracking-widest uppercase opacity-50"><i class="fas fa-download mr-1"></i>匯出今日行程圖片</button>
+                </div>
             </div>
 
             <div v-if="activeTab === 'wallet'" class="space-y-6">
@@ -277,13 +284,10 @@
                     if(idx > -1) {
                         this.shoppingList[idx].isBought = !this.shoppingList[idx].isBought;
                         if(this.shoppingList[idx].isBought) {
-                            // 移到該分類的最後面
                             const cat = this.shoppingList[idx].category;
                             const item = this.shoppingList.splice(idx, 1)[0];
                             let lastIdx = -1;
-                            for(let i=0; i<this.shoppingList.length; i++){
-                                if(this.shoppingList[i].category === cat) lastIdx = i;
-                            }
+                            for(let i=0; i<this.shoppingList.length; i++){ if(this.shoppingList[i].category === cat) lastIdx = i; }
                             if(lastIdx === -1) this.shoppingList.push(item);
                             else this.shoppingList.splice(lastIdx + 1, 0, item);
                         }
@@ -294,7 +298,18 @@
                 openNoteAdd() { this.isEditNote = false; this.noteForm = { content: '', tag: '', id: Date.now() }; this.showNoteModal = true; },
                 openNoteEdit(idx) { this.isEditNote = true; this.editIndex = idx; this.noteForm = {...this.travelNotes[idx]}; this.showNoteModal = true; },
                 saveNote() { if(this.isEditNote) this.travelNotes[this.editIndex] = {...this.noteForm}; else this.travelNotes.unshift({...this.noteForm}); this.sync(); this.showNoteModal = false; },
-                deleteNote(idx) { if(confirm('刪除 MEMO？')) { this.travelNotes.splice(idx, 1); this.sync(); } }
+                deleteNote(idx) { if(confirm('刪除 MEMO？')) { this.travelNotes.splice(idx, 1); this.sync(); } },
+                exportImage() {
+                    const appElement = document.getElementById('app');
+                    appElement.classList.add('export-mode');
+                    html2canvas(appElement, { useCORS: true, backgroundColor: "#f8fbfb", scale: 2, width: 375 }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `Busan_Day${this.selectedDay}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        appElement.classList.remove('export-mode');
+                    });
+                }
             }
         }).mount('#app');
     </script>
