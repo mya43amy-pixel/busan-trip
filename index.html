@@ -30,16 +30,16 @@
         [v-cloak] { display: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 💡 2. 日期比例修正：日期大(20px)、星期小(11px) */
-        .date-btn { min-width: 65px; height: 70px; border-radius: 20px; transition: all 0.3s; }
-        .date-btn .date-text { font-size: 20px; font-weight: 900; line-height: 1; margin-bottom: 2px; }
-        .date-btn .day-text { font-size: 11px; opacity: 0.7; font-weight: bold; }
+        /* 💡 日期比例微調：日期 16px, 星期 13px */
+        .date-btn { min-width: 65px; height: 68px; border-radius: 20px; transition: all 0.3s; }
+        .date-btn .date-text { font-size: 16px; font-weight: 800; line-height: 1.2; }
+        .date-btn .day-text { font-size: 13px; opacity: 0.8; font-weight: 500; margin-top: 2px; }
 
         .export-mode { padding: 0 !important; width: 375px !important; }
         .export-mode .fixed, .export-mode .border-dashed { display: none !important; }
         .export-mode header { border-radius: 0 !important; }
 
-        .drag-handle { cursor: grab; padding: 4px; color: rgba(255,255,255,0.7); transition: color 0.2s; }
+        .drag-handle { cursor: grab; padding: 4px; color: rgba(255,255,255,0.7); }
         .shop-img-container { width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #f9fbfb; display: flex; align-items: center; justify-content: center; position: relative; }
         .shop-img-container img { width: 100%; height: 100%; object-fit: cover; }
     </style>
@@ -113,10 +113,13 @@
                     <h2 class="text-4xl font-black">₩ {{totalSpent.toLocaleString()}}</h2>
                     <p class="text-sm opacity-70 font-bold">≈ NT$ {{Math.round(totalSpent * 0.024).toLocaleString()}}</p>
                 </div>
+
                 <div class="space-y-3">
                     <div v-for="(bill, index) in bills" :key="index" @click="editBill(index)" class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-50 shadow-sm">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center teal-text"><i :class="bill.method === '現金' ? 'fas fa-coins' : 'fas fa-credit-card'"></i></div>
+                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center teal-text">
+                                <i :class="bill.method === '現金' ? 'fas fa-coins' : 'fas fa-credit-card'"></i>
+                            </div>
                             <div>
                                 <p class="font-bold text-gray-800 text-sm">{{bill.itemName}}</p>
                                 <p class="text-[10px] text-gray-400 font-bold">{{bill.payer}} · {{bill.category}}</p>
@@ -140,6 +143,7 @@
                         <input type="number" v-model="convTWD" @input="updateConv('TWD')" class="text-right bg-transparent outline-none font-bold teal-text flex-1" placeholder="台幣">
                     </div>
                 </div>
+
                 <div v-for="cat in ['食物', '購物', '美妝', '其他']" :key="cat" class="space-y-3">
                     <h3 class="font-black text-gray-700 text-sm px-2 tracking-widest">{{cat}}</h3>
                     <draggable v-model="shoppingList" :group="{ name: 'shop', pull: false, put: false }" handle=".drag-handle" @change="sync" item-key="id" class="grid grid-cols-2 gap-3">
@@ -189,81 +193,47 @@
                         <div class="flex gap-2">
                             <button v-for="t in ['walk', 'car', 'bus', 'subway', 'plane']" :key="t" @click="toggleTransit(t)" :class="form.transitType.includes(t) ? 'teal-theme text-white' : 'bg-white text-gray-300'" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"><i :class="getTransitIcon(t)"></i></button>
                         </div>
-                        <div class="flex items-center gap-3 mt-4">
-                            <input type="number" v-model="form.transitTime" class="input-round w-24 text-center" placeholder="時間"><select v-model="form.transitUnit" class="input-round w-24"><option value="m">分鐘</option><option value="h">小時</option></select>
-                        </div>
+                        <div class="flex items-center gap-3 mt-4"><input type="number" v-model="form.transitTime" class="input-round w-24 text-center" placeholder="時間"><select v-model="form.transitUnit" class="input-round w-24"><option value="m">分鐘</option><option value="h">小時</option></select></div>
                     </div>
-                    <div class="flex gap-3 pt-4">
-                        <button v-if="isEditing" @click="deleteItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button>
-                        <button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button>
-                    </div>
+                    <div class="flex gap-3 pt-4"><button v-if="isEditing" @click="deleteItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
         <div v-if="showBillModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end">
             <div class="bg-white w-full rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xl font-black text-gray-800">{{isEditBill ? '編輯消費' : '新增消費'}}</h3>
-                    <button @click="showBillModal = false" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fas fa-times"></i></button>
-                </div>
+                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">{{isEditBill ? '編輯消費' : '新增消費'}}</h3><button @click="showBillModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-6">
                     <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">項目名稱</label><input v-model="billForm.itemName" class="input-round" placeholder="名稱"></div>
                     <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">金額 (KRW)</label><input type="number" v-model="billForm.amount" class="input-round" placeholder="0"></div>
                     <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">支付方式</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button v-for="m in ['現金', '刷卡']" :key="m" @click="billForm.method = m" :class="billForm.method === m ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-3 rounded-xl font-bold text-sm">{{m}}</button>
-                        </div>
+                        <div class="grid grid-cols-2 gap-3"><button v-for="m in ['現金', '刷卡']" :key="m" @click="billForm.method = m" :class="billForm.method === m ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-3 rounded-xl font-bold text-sm">{{m}}</button></div>
                     </div>
                     <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">分類</label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" @click="billForm.category = c" :class="billForm.category === c ? 'teal-theme text-white shadow-lg' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button>
-                        </div>
+                        <div class="grid grid-cols-3 gap-2"><button v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" @click="billForm.category = c" :class="billForm.category === c ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button></div>
                     </div>
                     <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">備註</label><textarea v-model="billForm.note" class="input-round h-20" placeholder="備註"></textarea></div>
-                    <div class="flex gap-3 pt-4">
-                        <button v-if="isEditBill" @click="deleteBill" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button>
-                        <button @click="saveBill" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button>
-                    </div>
+                    <div class="flex gap-3 pt-4"><button v-if="isEditBill" @click="deleteBill" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveBill" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
         <div v-if="showShopModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end">
             <div class="bg-white w-full rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xl font-black text-gray-800">{{isEditShop ? '編輯待買' : '新增待買'}}</h3>
-                    <button @click="showShopModal = false" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fas fa-times"></i></button>
-                </div>
+                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">{{isEditShop ? '編輯待買' : '新增待買'}}</h3><button @click="showShopModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-6">
-                    <div class="flex justify-center">
-                        <label class="w-32 h-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative">
-                            <img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover">
-                            <div v-else class="text-center"><i class="fas fa-camera text-gray-200 text-xl mb-1"></i><p class="text-[8px] text-gray-300 font-bold uppercase">Upload</p></div>
-                            <input type="file" @change="handleFileUpload" class="hidden" accept="image/*">
-                        </label>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">商品名稱</label><input v-model="shopForm.name" class="input-round" placeholder="名稱"></div>
-                        <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">預計金額</label><input type="number" v-model="shopForm.price" class="input-round" placeholder="₩ 0"></div>
-                    </div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">分類</label>
-                        <div class="grid grid-cols-4 gap-2">
-                            <button v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" @click="shopForm.category = c" :class="shopForm.category === c ? 'teal-theme text-white shadow-md' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button>
-                        </div>
-                    </div>
-                    <div class="flex gap-3 pt-4">
-                        <button v-if="isEditShop" @click="deleteShopItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button>
-                        <button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button>
-                    </div>
+                    <div class="flex justify-center"><label class="w-32 h-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><div v-else class="text-center"><i class="fas fa-camera text-gray-200 mb-1"></i><p class="text-[8px] text-gray-300 font-bold">Upload</p></div><input type="file" @change="handleFileUpload" class="hidden" accept="image/*"></label></div>
+                    <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">名稱</label><input v-model="shopForm.name" class="input-round"></div><div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">金額</label><input type="number" v-model="shopForm.price" class="input-round"></div></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">分類</label><div class="grid grid-cols-4 gap-2"><button v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" @click="shopForm.category = c" :class="shopForm.category === c ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button></div></div>
+                    <div class="flex gap-3 pt-4"><button v-if="isEditShop" @click="deleteShopItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
         <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-6">
             <div class="bg-white w-full rounded-[35px] p-8 shadow-2xl">
-                <h3 class="text-lg font-black text-gray-800 mb-6 text-center uppercase tracking-widest">Edit Summary</h3>
-                <input v-model="tempSummary" class="input-round text-center font-bold" placeholder="今日大綱">
+                <h3 class="text-lg font-black text-gray-800 mb-6 text-center">Edit Summary</h3>
+                <input v-model="tempSummary" class="input-round text-center font-bold">
                 <div class="flex gap-3 mt-8"><button @click="showSummaryModal = false" class="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold">取消</button><button @click="saveSummary" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
             </div>
         </div>
@@ -276,7 +246,7 @@
         const db = firebase.database();
         const DATA_PATH = 'busan_trip_final';
 
-        createApp({
+        const app = createApp({
             components: { draggable: vuedraggable },
             data() {
                 return {
@@ -340,7 +310,8 @@
                     });
                 }
             }
-        }).mount('#app');
+        });
+        app.mount('#app');
     </script>
 </body>
 </html>
