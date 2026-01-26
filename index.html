@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=144">
-    <link rel="icon" href="icon.png?v=144">
+    <link rel="apple-touch-icon" href="icon.png?v=145">
+    <link rel="icon" href="icon.png?v=145">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -36,6 +36,10 @@
         .export-mode .no-export { display: none !important; }
         .export-mode .card-pop { box-shadow: none !important; border: 1px solid #eee !important; margin-bottom: 10px !important; }
         .export-mode .summary-box { background: #FEF9E7 !important; border: 1px solid #F9E79F !important; margin-bottom: 20px !important; }
+        
+        /* 拖動把手樣式 */
+        .drag-handle { cursor: grab; padding: 10px; color: #ddd; }
+        .drag-handle:active { cursor: grabbing; }
     </style>
 </head>
 <body>
@@ -133,9 +137,11 @@
                             <i class="fas fa-chevron-down text-xs text-gray-300 transition-transform" :class="{'rotate-180': collapsed[cat]}"></i>
                         </div>
                         <div v-show="!collapsed[cat]">
-                            <draggable v-model="shoppingList" item-key="id" handle=".handle-area" @end="sync" class="grid grid-cols-2 gap-3">
+                            <draggable v-model="shoppingList" item-key="id" handle=".handle" @end="sync" class="grid grid-cols-2 gap-3">
                                 <template #item="{element}">
-                                    <div v-if="element.category === cat" class="card-pop overflow-hidden flex flex-col border border-gray-50 shadow-sm relative handle-area" :class="{'card-bought': element.isBought}">
+                                    <div v-if="element.category === cat" class="card-pop overflow-hidden flex flex-col border border-gray-50 shadow-sm relative" :class="{'card-bought': element.isBought}">
+                                        <div class="handle absolute top-0 left-0 p-2 text-gray-200 z-10"><i class="fas fa-bars text-[10px]"></i></div>
+                                        
                                         <div @click="editShopItem(element.id)" class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                                             <img v-if="element.imgBase64" :src="element.imgBase64" class="w-full h-full object-cover">
                                             <i v-else class="fas fa-shopping-bag text-gray-100 text-3xl"></i>
@@ -161,7 +167,14 @@
                     <div class="space-y-2">
                         <div v-for="(note, nIdx) in travelNotes" :key="nIdx" class="bg-white p-4 rounded-2xl border border-gray-50 shadow-sm flex items-start gap-3 animate-up">
                             <div class="flex flex-col gap-1 mt-1"><button @click="moveNote(nIdx, -1)" class="text-[10px] text-gray-300"><i class="fas fa-chevron-up"></i></button><button @click="moveNote(nIdx, 1)" class="text-[10px] text-gray-300"><i class="fas fa-chevron-down"></i></button></div>
-                            <div @click="openNoteEdit(nIdx)" class="flex-1"><p class="text-sm text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">{{note.content}}</p><p v-if="note.tag" class="text-[9px] teal-text font-bold mt-1 uppercase"># {{note.tag}}</p></div>
+                            <div @click="openNoteEdit(nIdx)" class="flex-1">
+                                <p class="text-sm text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">{{note.content}}</p>
+                                <div v-if="note.tag" class="mt-2 flex">
+                                    <a :href="formatUrl(note.tag)" target="_blank" @click.stop class="text-[10px] bg-teal-50 teal-text px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
+                                        <i class="fas fa-link"></i> 開啟連結
+                                    </a>
+                                </div>
+                            </div>
                             <button @click="deleteNote(nIdx)" class="text-gray-200 text-xs"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
@@ -202,7 +215,7 @@
         </div>
 
         <div v-if="showNoteModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
-            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-6"><h3 class="font-black text-lg">MEMO 📝</h3></div><div class="space-y-4"><textarea v-model="noteForm.content" placeholder="輸入內容..." class="input-round text-sm" rows="5"></textarea><input v-model="noteForm.tag" placeholder="標籤 (選填)" class="input-round text-xs"></div><div class="flex gap-4 mt-8"><button @click="showNoteModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveNote" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
+            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up"><div class="flex justify-between mb-6"><h3 class="font-black text-lg">MEMO 📝</h3></div><div class="space-y-4"><textarea v-model="noteForm.content" placeholder="輸入內容..." class="input-round text-sm" rows="5"></textarea><input v-model="noteForm.tag" placeholder="網址連結 (選填)" class="input-round text-xs"></div><div class="flex gap-4 mt-8"><button @click="showNoteModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveNote" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div>
         </div>
 
         <div v-if="showMemberModal" class="fixed inset-0 bg-black/60 flex items-center p-8 z-[60]">
@@ -234,7 +247,7 @@
                     activeTab: 'itinerary', selectedDay: 1, calcKrw: null, calcTwd: null,
                     showModal: false, showBillModal: false, showShopModal: false, showNoteModal: false, showMemberModal: false, showSummaryModal: false,
                     tempSummary: '', isEditing: false, isEditBill: false, isEditShop: false, isEditNote: false, editIndex: null, memberInput: '',
-                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '其他': true },
+                    members: ['Bibi'], collapsed: { '食物': false, '購物': false, '美妝': false, '其他': true },
                     dateConfig: [{date: '2/17', day: '二'}, {date: '2/18', day: '三'}, {date: '2/19', day: '四'}, {date: '2/20', day: '五'}, {date: '2/21', day: '六'}],
                     form: { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
                     billForm: { itemName: '', amount: '', method: 'card', payer: 'Bibi', category: '食物', note: '' },
@@ -264,17 +277,12 @@
             },
             methods: {
                 sync() { db.ref(DATA_PATH).set({ itinerary: this.itinerary, bills: this.bills, shoppingList: this.shoppingList, members: this.members, travelNotes: this.travelNotes, dailySummaries: this.dailySummaries }); },
-                sortShoppingList() {
-                    this.shoppingList.sort((a, b) => (a.isBought === b.isBought) ? 0 : a.isBought ? 1 : -1);
-                },
+                sortShoppingList() { this.shoppingList.sort((a, b) => (a.isBought === b.isBought) ? 0 : a.isBought ? 1 : -1); },
                 toggleBought(id) {
                     const item = this.shoppingList.find(i => i.id === id);
-                    if (item) {
-                        item.isBought = !item.isBought;
-                        this.sortShoppingList();
-                        this.sync();
-                    }
+                    if (item) { item.isBought = !item.isBought; this.sortShoppingList(); this.sync(); }
                 },
+                formatUrl(url) { if (!url) return ''; if (url.startsWith('http')) return url; return 'https://' + url; },
                 openSummaryModal() { this.tempSummary = this.dailySummaries[this.selectedDay] || ''; this.showSummaryModal = true; },
                 saveSummary() { this.dailySummaries[this.selectedDay] = this.tempSummary; this.sync(); this.showSummaryModal = false; },
                 updateTwd() { this.calcTwd = Math.round(this.calcKrw * 0.024); },
@@ -287,12 +295,11 @@
                 isTransitSelected(type) { return this.getTransitArray(this.form.transitType).includes(type); },
                 toggleTransit(type) {
                     let arr = this.getTransitArray(this.form.transitType);
-                    if (arr.includes(type)) arr = arr.filter(t => t !== type);
-                    else arr.push(type);
+                    if (arr.includes(type)) arr = arr.filter(t => t !== type); else arr.push(type);
                     this.form.transitType = arr.join(',');
                 },
                 getMemberTotal(name) { return (this.bills || []).filter(b => b.payer === name).reduce((sum, b) => sum + (Number(b.amount) || 0), 0); },
-                getCatItems(cat) { return this.shoppingList.filter(i => i.category === cat); },
+                getCatItems(cat) { return (this.shoppingList || []).filter(i => i.category === cat); },
                 openAddModal() { this.isEditing = false; this.form = { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' }; this.showModal = true; },
                 openEditModal(idx) { this.isEditing = true; this.editIndex = idx; this.form = { ...this.itinerary[this.selectedDay][idx] }; this.showModal = true; },
                 saveForm() {
@@ -339,8 +346,7 @@
                     html2canvas(appElement, { useCORS: true, backgroundColor: "#f8fbfb", scale: 2, width: 375, windowWidth: 375 }).then(canvas => {
                         const link = document.createElement('a');
                         link.download = `Busan_Day${this.selectedDay}.png`;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
+                        link.href = canvas.toDataURL('image/png'); link.click();
                         appElement.classList.remove('export-mode');
                         header.querySelectorAll('.export-only').forEach(el => el.style.display = 'none');
                     });
