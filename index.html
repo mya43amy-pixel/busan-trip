@@ -23,14 +23,13 @@
         .active-tab { color: #78B7BB !important; font-weight: bold; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .input-round { border-radius: 12px; border: 1px solid #eef2f2; padding: 10px; outline: none; background: #f9fbfb; width: 100%; font-size: 14px; }
-        .card-pop { border-radius: 20px; background: white; box-shadow: 0 4px 12px rgba(120, 183, 187, 0.08); transition: transform 0.2s; }
+        .card-pop { border-radius: 20px; background: white; box-shadow: 0 4px 12px rgba(120, 183, 187, 0.08); }
         .card-bought { opacity: 0.6; filter: grayscale(0.5); }
         [v-cloak] { display: none; }
         .animate-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .memo-link { color: #78B7BB; text-decoration: underline; word-break: break-all; font-weight: bold; }
         .currency-input { background: transparent; border: none; text-align: right; width: 100%; font-weight: bold; outline: none; }
-        /* 匯出專用樣式 */
         .export-mode { width: 375px !important; position: fixed; left: -9999px; top: 0; background: #f8fbfb; padding-bottom: 40px; }
     </style>
 </head>
@@ -94,8 +93,27 @@
                     </div>
                 </div>
 
+                <div class="flex justify-end px-2"><button @click="manageMembers" class="text-[10px] teal-text font-bold"><i class="fas fa-users-cog mr-1"></i>旅伴</button></div>
+                
+                <div class="space-y-3">
+                    <div v-for="(bill, index) in bills" :key="index" @click="editBill(index)" class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-50 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center teal-text"><i :class="bill.method === '現金' ? 'fas fa-coins' : 'fas fa-credit-card'"></i></div>
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">{{bill.itemName}}</p>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">{{bill.payer}} · {{bill.category}} · {{bill.method}}</p>
+                                <p v-if="bill.note" class="text-[11px] text-gray-400 mt-1 italic">{{bill.note}}</p>
+                            </div>
+                        </div>
+                        <p class="font-black text-sm text-gray-700">₩ {{bill.amount.toLocaleString()}}</p>
+                    </div>
+                </div>
+                <button @click="openBillModal" class="fixed bottom-28 right-6 w-16 h-16 teal-theme text-white rounded-full shadow-2xl flex items-center justify-center text-2xl border-4 border-white z-30"><i class="fas fa-plus"></i></button>
+            </div>
+
+            <div v-if="activeTab === 'tools'" class="space-y-8">
                 <div class="card-pop p-4 space-y-3">
-                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-1">Real-time Currency</p>
+                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-1">Currency Converter</p>
                     <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
                         <span class="text-xs font-bold text-gray-400 uppercase">KRW</span>
                         <input type="number" v-model="convKRW" @input="updateConv('KRW')" class="currency-input text-gray-700" placeholder="輸入韓元">
@@ -107,25 +125,8 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end px-2"><button @click="manageMembers" class="text-[10px] teal-text font-bold"><i class="fas fa-users-cog mr-1"></i>旅伴</button></div>
-                <div class="space-y-3">
-                    <div v-for="(bill, index) in bills" :key="index" @click="editBill(index)" class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-50 shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center teal-text"><i :class="bill.method === '現金' ? 'fas fa-coins' : 'fas fa-credit-card'"></i></div>
-                            <div>
-                                <p class="font-bold text-gray-800 text-sm">{{bill.itemName}}</p>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase">{{bill.payer}} · {{bill.category}} · {{bill.method}}</p>
-                            </div>
-                        </div>
-                        <p class="font-black text-sm text-gray-700">₩ {{bill.amount.toLocaleString()}}</p>
-                    </div>
-                </div>
-                <button @click="openBillModal" class="fixed bottom-28 right-6 w-16 h-16 teal-theme text-white rounded-full shadow-2xl flex items-center justify-center text-2xl border-4 border-white z-30"><i class="fas fa-plus"></i></button>
-            </div>
-
-            <div v-if="activeTab === 'tools'" class="space-y-8">
                 <div class="space-y-4">
-                    <div v-for="cat in ['食物', '購物', '美妝', '交通', '其他']" :key="cat" class="space-y-3">
+                    <div v-for="cat in ['食物', '購物', '美妝', '其他']" :key="cat" class="space-y-3">
                         <div @click="collapsed[cat] = !collapsed[cat]" class="flex justify-between items-center px-2 cursor-pointer">
                             <h3 class="font-black text-gray-700 text-sm">{{cat}} ({{getCatItems(cat).length}})</h3>
                             <i class="fas fa-chevron-down text-xs text-gray-300 transition-transform" :class="{'rotate-180': !collapsed[cat]}"></i>
@@ -215,14 +216,14 @@
                     <input v-model="shopForm.name" placeholder="想買什麼？" class="input-round font-bold">
                     <input v-model="shopForm.price" type="number" placeholder="預估金額 (KRW)" class="input-round font-black teal-text">
                     <select v-model="shopForm.category" class="input-round text-xs">
-                        <option v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" :value="c">{{c}}</option>
+                        <option v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" :value="c">{{c}}</option>
                     </select>
                     <textarea v-model="shopForm.note" placeholder="備註 (例如規格、地點...)" class="input-round text-xs" rows="2"></textarea>
                 </div>
                 <div class="flex gap-4 mt-8"><button @click="showShopModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存項目</button></div>
             </div>
         </div>
-
+        
         <div v-if="showModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
             <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up overflow-y-auto max-h-[90vh]">
                 <div class="flex justify-between mb-6"><h3 class="font-black text-lg">行程編輯 📍</h3><button v-if="isEditing" @click="deleteItem" class="text-red-400 text-xs font-bold">刪除</button></div>
@@ -283,7 +284,7 @@
                     activeTab: 'itinerary', selectedDay: 1,
                     showModal: false, showBillModal: false, showShopModal: false, showNoteModal: false, showMemberModal: false, showSummaryModal: false,
                     isEditing: false, isEditBill: false, isEditShop: false, isEditNote: false, editIndex: null, memberInput: '', tempSummary: '',
-                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '交通': true, '其他': true },
+                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '其他': true },
                     dateConfig: [{date: '2/17', day: '二'}, {date: '2/18', day: '三'}, {date: '2/19', day: '四'}, {date: '2/20', day: '五'}, {date: '2/21', day: '六'}],
                     form: { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
                     billForm: { itemName: '', amount: '', method: '現金', payer: 'Bibi', category: '食物', note: '' },
@@ -348,7 +349,6 @@
                     container.className = 'export-mode';
                     container.appendChild(header.cloneNode(true));
                     container.appendChild(area.cloneNode(true));
-                    // 移除匯出圖中的按鈕
                     container.querySelectorAll('button').forEach(btn => btn.remove());
                     document.body.appendChild(container);
                     html2canvas(container, { useCORS: true, scale: 2, backgroundColor: '#f8fbfb' }).then(canvas => {
