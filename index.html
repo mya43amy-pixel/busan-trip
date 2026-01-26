@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>busan 2026</title>
+    <title>busan</title>
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -89,19 +89,6 @@
                     </div>
                 </div>
 
-                <div class="card-pop p-4 space-y-3">
-                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-1">Real-time Currency</p>
-                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
-                        <span class="text-xs font-bold text-gray-400 uppercase">KRW</span>
-                        <input type="number" v-model="convKRW" @input="updateConv('KRW')" class="currency-input text-gray-700" placeholder="輸入韓元">
-                    </div>
-                    <div class="flex justify-center text-gray-200"><i class="fas fa-exchange-alt"></i></div>
-                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
-                        <span class="text-xs font-bold text-gray-400 uppercase">TWD</span>
-                        <input type="number" v-model="convTWD" @input="updateConv('TWD')" class="currency-input teal-text" placeholder="輸入台幣">
-                    </div>
-                </div>
-
                 <div class="flex justify-end px-2"><button @click="manageMembers" class="text-[10px] teal-text font-bold"><i class="fas fa-users-cog mr-1"></i>旅伴</button></div>
                 <div class="space-y-3">
                     <div v-for="(bill, index) in bills" :key="index" @click="editBill(index)" class="bg-white p-4 rounded-2xl flex justify-between items-center border border-gray-50 shadow-sm">
@@ -119,8 +106,22 @@
             </div>
 
             <div v-if="activeTab === 'tools'" class="space-y-8">
+                
+                <div class="card-pop p-4 space-y-3">
+                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-1">Real-time Currency</p>
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                        <span class="text-xs font-bold text-gray-400 uppercase">KRW</span>
+                        <input type="number" v-model="convKRW" @input="updateConv('KRW')" class="currency-input text-gray-700" placeholder="輸入韓元">
+                    </div>
+                    <div class="flex justify-center text-gray-200"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                        <span class="text-xs font-bold text-gray-400 uppercase">TWD</span>
+                        <input type="number" v-model="convTWD" @input="updateConv('TWD')" class="currency-input teal-text" placeholder="輸入台幣">
+                    </div>
+                </div>
+
                 <div class="space-y-4">
-                    <div v-for="cat in ['食物', '購物', '美妝', '交通', '其他']" :key="cat" class="space-y-3">
+                    <div v-for="cat in ['食物', '購物', '美妝', '其他']" :key="cat" class="space-y-3">
                         <div @click="collapsed[cat] = !collapsed[cat]" class="flex justify-between items-center px-2 cursor-pointer">
                             <h3 class="font-black text-gray-700 text-sm">{{cat}} ({{getCatItems(cat).length}})</h3>
                             <i class="fas fa-chevron-down text-xs text-gray-300 transition-transform" :class="{'rotate-180': !collapsed[cat]}"></i>
@@ -208,7 +209,7 @@
                     <input v-model="shopForm.name" placeholder="想買什麼？" class="input-round font-bold">
                     <input v-model="shopForm.price" type="number" placeholder="預估金額 (KRW)" class="input-round font-black teal-text">
                     <select v-model="shopForm.category" class="input-round text-xs">
-                        <option v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" :value="c">{{c}}</option>
+                        <option v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" :value="c">{{c}}</option>
                     </select>
                     <textarea v-model="shopForm.note" placeholder="備註 (例如規格、地點...)" class="input-round text-xs" rows="2"></textarea>
                 </div>
@@ -247,6 +248,7 @@
                 <div class="flex gap-4 mt-8"><button @click="showModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存行程</button></div>
             </div>
         </div>
+        
         <div v-if="showMemberModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
             <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up">
                 <h3 class="font-black mb-6">編輯旅伴成員 👥</h3>
@@ -254,6 +256,7 @@
                 <div class="flex gap-4 mt-8"><button @click="showMemberModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="updateMembers" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">更新成員</button></div>
             </div>
         </div>
+
         <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end z-50">
             <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 animate-up">
                 <h3 class="font-black mb-6">編輯今日大綱 📝</h3>
@@ -277,7 +280,7 @@
                     activeTab: 'itinerary', selectedDay: 1,
                     showModal: false, showBillModal: false, showShopModal: false, showNoteModal: false, showMemberModal: false, showSummaryModal: false,
                     isEditing: false, isEditBill: false, isEditShop: false, isEditNote: false, editIndex: null, memberInput: '', tempSummary: '',
-                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '交通': true, '其他': true },
+                    members: ['Bibi'], collapsed: { '食物': true, '購物': true, '美妝': true, '其他': true },
                     dateConfig: [{date: '2/17', day: '二'}, {date: '2/18', day: '三'}, {date: '2/19', day: '四'}, {date: '2/20', day: '五'}, {date: '2/21', day: '六'}],
                     form: { time: '09:00', place: '', note: '', transitType: '', transitTime: '', transitUnit: 'm', stayTime: '', stayUnit: 'h', mapUrl: '' },
                     billForm: { itemName: '', amount: '', method: '現金', payer: 'Bibi', category: '食物' },
