@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 busan</title>
+    <title>2026 BUSAN</title>
     <meta name="apple-mobile-web-app-title" content="2026 BUSAN">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -36,7 +36,6 @@
         .currency-input { background: transparent; border: none; text-align: right; width: 100%; font-weight: bold; outline: none; }
         .date-btn-date { font-size: 11px; font-weight: 800; }
         .date-btn-day { font-size: 18px; font-weight: 900; }
-        /* 強制取消斜體 */
         .no-italic { font-style: normal !important; }
     </style>
 </head>
@@ -88,7 +87,8 @@
                     <div class="text-center mb-4">
                         <p class="text-[10px] opacity-80 font-bold uppercase tracking-widest">Total Spent</p>
                         <h2 class="text-4xl font-black">₩ {{totalSpent.toLocaleString()}}</h2>
-                        <div class="flex justify-center gap-4 mt-1 text-[11px] opacity-90 font-bold">
+                        <p class="text-sm opacity-70 font-bold">≈ NT$ {{Math.round(totalSpent * 0.024).toLocaleString()}}</p>
+                        <div class="flex justify-center gap-4 mt-2 text-[11px] opacity-90 font-bold border-t border-white/10 pt-2">
                             <span>現金: ₩{{cashTotal.toLocaleString()}}</span>
                             <span>刷卡: ₩{{cardTotal.toLocaleString()}}</span>
                         </div>
