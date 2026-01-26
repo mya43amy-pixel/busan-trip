@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Busan 2026">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="icon.png?v=144">
-    <link rel="icon" href="icon.png?v=144">
+    <link rel="apple-touch-icon" href="icon.png?v=146">
+    <link rel="icon" href="icon.png?v=146">
 
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
@@ -29,12 +29,16 @@
         .card-bought { opacity: 0.6; filter: grayscale(0.5); }
         [v-cloak] { display: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .date-btn { min-width: 65px; height: 65px; border-radius: 20px; transition: all 0.3s; }
+        
+        /* 💡 Bibi 這裡就是妳要的小一點點跟大一點點 */
+        .date-btn { min-width: 65px; height: 68px; border-radius: 20px; transition: all 0.3s; }
+        .date-btn .date-text { font-size: 16px; font-weight: 800; line-height: 1; }
+        .date-btn .day-text { font-size: 12px; opacity: 0.7; font-weight: 500; margin-bottom: 2px; }
+
         .export-mode { padding: 0 !important; width: 375px !important; }
         .export-mode .fixed, .export-mode .border-dashed { display: none !important; }
         .export-mode header { border-radius: 0 !important; }
-        .drag-handle { cursor: grab; padding: 4px; color: rgba(255,255,255,0.7); transition: color 0.2s; }
-        .drag-handle:hover { color: white; }
+        .drag-handle { cursor: grab; padding: 4px; color: rgba(255,255,255,0.7); }
         .shop-img-container { width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #f9fbfb; display: flex; align-items: center; justify-content: center; position: relative; }
         .shop-img-container img { width: 100%; height: 100%; object-fit: cover; }
     </style>
@@ -47,8 +51,8 @@
                 <div v-for="(d, i) in dateConfig" :key="i" @click="selectedDay = (i+1)" 
                      :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB] shadow-md' : 'bg-white/20 text-white'" 
                      class="date-btn flex flex-col items-center justify-center cursor-pointer">
-                    <span class="text-[10px] opacity-70 font-bold mb-0.5">{{d.day}}</span>
-                    <span class="text-lg font-black">{{d.date.split('/')[1]}}</span>
+                    <span class="day-text">{{d.day}}</span>
+                    <span class="date-text">{{d.date.split('/')[1]}}</span>
                 </div>
             </div>
             <div class="export-only hidden text-center mt-4 font-black tracking-widest text-xs opacity-60">DAY {{selectedDay}} ITINERARY</div>
@@ -76,9 +80,7 @@
                         </div>
                     </div>
                 </div>
-
                 <button @click="openAddModal" class="w-full py-4 border-2 border-dashed border-teal-100 rounded-[24px] text-teal-200 font-bold">+ 新增行程</button>
-
                 <div class="mt-10 pt-10 border-t border-gray-100">
                     <div class="flex items-center justify-between mb-4 px-2">
                         <h3 class="font-black text-gray-400 text-xs tracking-widest uppercase">URL Links / Memo</h3>
@@ -91,15 +93,14 @@
                                 <button @click="moveNote(idx, 1)" class="text-[10px] text-gray-200"><i class="fas fa-chevron-down"></i></button>
                             </div>
                             <div class="flex-1 overflow-hidden">
-                                <input v-model="travelNotes[idx]" @change="sync" placeholder="輸入網址或備註..." class="w-full bg-transparent text-sm text-gray-600 outline-none">
-                                <a v-if="travelNotes[idx] && travelNotes[idx].startsWith('http')" :href="travelNotes[idx]" target="_blank" class="text-[10px] teal-text font-bold mt-1 block">開啟網址 <i class="fas fa-external-link-alt"></i></a>
+                                <input v-model="travelNotes[idx]" @change="sync" class="w-full bg-transparent text-sm text-gray-600 outline-none">
+                                <a v-if="travelNotes[idx] && travelNotes[idx].startsWith('http')" :href="travelNotes[idx]" target="_blank" class="text-[10px] teal-text font-bold mt-1 block">開啟網址</a>
                             </div>
                             <button @click="removeNote(idx)" class="text-gray-200"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                 </div>
-                
-                <button @click="exportImage" class="w-full mt-6 py-3 text-gray-300 text-[10px] font-black tracking-[0.2em] uppercase">Export Day {{selectedDay}} Image</button>
+                <button @click="exportImage" class="w-full mt-6 py-3 text-gray-300 text-[10px] font-black tracking-[0.2em] uppercase">Export Image</button>
             </div>
 
             <div v-if="activeTab === 'wallet'" class="space-y-6">
@@ -137,15 +138,13 @@
                 </div>
                 <div v-for="cat in ['食物', '購物', '美妝', '其他']" :key="cat" class="space-y-3">
                     <h3 class="font-black text-gray-700 text-sm px-2 tracking-widest">{{cat}}</h3>
-                    <draggable v-model="shoppingList" :group="{ name: 'shop', pull: false, put: false }" handle=".drag-handle" @change="sync" item-key="id" class="grid grid-cols-2 gap-3">
+                    <draggable v-model="shoppingList" :group="{ name: 'shop' }" handle=".drag-handle" @change="sync" item-key="id" class="grid grid-cols-2 gap-3">
                         <template #item="{element}">
                             <div v-if="element.category === cat" class="card-pop overflow-hidden border border-gray-50 relative" :class="{'card-bought': element.isBought}">
                                 <div @click="editShopItem(element.id)" class="shop-img-container">
                                     <img v-if="element.imgBase64" :src="element.imgBase64">
                                     <i v-else class="fas fa-shopping-bag text-gray-100 text-3xl"></i>
-                                    <div class="drag-handle absolute top-2 left-2 bg-black/20 rounded-lg p-1">
-                                        <i class="fas fa-grip-vertical text-white text-[10px]"></i>
-                                    </div>
+                                    <div class="drag-handle absolute top-2 left-2 bg-black/20 rounded-lg p-1"><i class="fas fa-grip-vertical text-white text-[10px]"></i></div>
                                 </div>
                                 <div class="p-3">
                                     <h4 class="font-bold text-gray-800 text-xs truncate">{{element.name}}</h4>
@@ -166,62 +165,53 @@
             <button @click="activeTab = 'tools'" :class="{'active-tab': activeTab === 'tools'}" class="flex flex-col items-center text-gray-300"><i class="fas fa-shopping-bag text-xl"></i><span class="text-[9px] mt-1 font-black">SHOP</span></button>
         </nav>
 
-        <div v-if="showModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end">
+        <div v-if="showModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end">
             <div class="bg-white w-full rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-xl font-black text-gray-800">{{isEditing ? '編輯行程' : '新增行程'}}</h3>
-                    <button @click="showModal = false" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fas fa-times"></i></button>
-                </div>
+                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">{{isEditing ? '編輯行程' : '新增行程'}}</h3><button @click="showModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">時間</label><input type="time" v-model="form.time" class="input-round font-bold teal-text text-lg"></div>
-                        <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">地點</label><input v-model="form.place" class="input-round" placeholder="地點名稱"></div>
+                        <div><label class="block text-xs font-black text-gray-400 mb-2">時間</label><input type="time" v-model="form.time" class="input-round font-bold teal-text text-lg"></div>
+                        <div><label class="block text-xs font-black text-gray-400 mb-2">地點</label><input v-model="form.place" class="input-round"></div>
                     </div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">備註</label><textarea v-model="form.note" class="input-round h-24" placeholder="備註"></textarea></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">地圖 URL</label><input v-model="form.mapUrl" class="input-round" placeholder="URL"></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">備註</label><textarea v-model="form.note" class="input-round h-24"></textarea></div>
                     <div class="bg-gray-50 p-5 rounded-[24px] space-y-4">
-                        <label class="block text-xs font-black text-gray-400 uppercase tracking-widest">交通方式</label>
+                        <label class="block text-xs font-black text-gray-400">交通方式</label>
                         <div class="flex gap-2">
                             <button v-for="t in ['walk', 'car', 'bus', 'subway', 'plane']" :key="t" @click="toggleTransit(t)" :class="form.transitType.includes(t) ? 'teal-theme text-white' : 'bg-white text-gray-300'" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"><i :class="getTransitIcon(t)"></i></button>
                         </div>
-                        <div class="flex items-center gap-3 mt-4"><input type="number" v-model="form.transitTime" class="input-round w-24 text-center" placeholder="時間"><select v-model="form.transitUnit" class="input-round w-24"><option value="m">分鐘</option><option value="h">小時</option></select></div>
+                        <div class="flex items-center gap-3 mt-4"><input type="number" v-model="form.transitTime" class="input-round w-24 text-center"><select v-model="form.transitUnit" class="input-round w-24"><option value="m">分鐘</option><option value="h">小時</option></select></div>
                     </div>
                     <div class="flex gap-3 pt-4"><button v-if="isEditing" @click="deleteItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
-        <div v-if="showBillModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end">
+        <div v-if="showBillModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end">
             <div class="bg-white w-full rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">{{isEditBill ? '編輯消費' : '新增消費'}}</h3><button @click="showBillModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
+                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">記帳</h3><button @click="showBillModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-6">
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">項目名稱</label><input v-model="billForm.itemName" class="input-round" placeholder="名稱"></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">金額 (KRW)</label><input type="number" v-model="billForm.amount" class="input-round" placeholder="0"></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">支付方式</label>
-                        <div class="grid grid-cols-2 gap-3"><button v-for="m in ['現金', '刷卡']" :key="m" @click="billForm.method = m" :class="billForm.method === m ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-3 rounded-xl font-bold text-sm">{{m}}</button></div>
-                    </div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">分類</label>
-                        <div class="grid grid-cols-3 gap-2"><button v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" @click="billForm.category = c" :class="billForm.category === c ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button></div>
-                    </div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">備註</label><textarea v-model="billForm.note" class="input-round h-20" placeholder="備註"></textarea></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">項目名稱</label><input v-model="billForm.itemName" class="input-round"></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">金額 (KRW)</label><input type="number" v-model="billForm.amount" class="input-round"></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">支付方式</label><div class="grid grid-cols-2 gap-3"><button v-for="m in ['現金', '刷卡']" :key="m" @click="billForm.method = m" :class="billForm.method === m ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-3 rounded-xl font-bold text-sm">{{m}}</button></div></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">分類</label><div class="grid grid-cols-3 gap-2"><button v-for="c in ['食物', '購物', '美妝', '交通', '其他']" :key="c" @click="billForm.category = c" :class="billForm.category === c ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button></div></div>
+                    <div><label class="block text-xs font-black text-gray-400 mb-2">備註</label><textarea v-model="billForm.note" class="input-round h-20"></textarea></div>
                     <div class="flex gap-3 pt-4"><button v-if="isEditBill" @click="deleteBill" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveBill" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
-        <div v-if="showShopModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end">
+        <div v-if="showShopModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end">
             <div class="bg-white w-full rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">{{isEditShop ? '編輯待買' : '新增待買'}}</h3><button @click="showShopModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
+                <div class="flex justify-between items-center mb-8"><h3 class="text-xl font-black text-gray-800">待買</h3><button @click="showShopModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div>
                 <div class="space-y-6">
-                    <div class="flex justify-center"><label class="w-32 h-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><div v-else class="text-center"><i class="fas fa-camera text-gray-200 mb-1"></i><p class="text-[8px] text-gray-300 font-bold">Upload</p></div><input type="file" @change="handleFileUpload" class="hidden" accept="image/*"></label></div>
-                    <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">名稱</label><input v-model="shopForm.name" class="input-round"></div><div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">金額</label><input type="number" v-model="shopForm.price" class="input-round"></div></div>
-                    <div><label class="block text-xs font-black text-gray-400 mb-2 uppercase tracking-widest">分類</label><div class="grid grid-cols-4 gap-2"><button v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" @click="shopForm.category = c" :class="shopForm.category === c ? 'teal-theme text-white' : 'bg-gray-50 text-gray-400'" class="py-2.5 rounded-xl font-bold text-xs">{{c}}</button></div></div>
+                    <div class="flex justify-center"><label class="w-32 h-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><div v-else class="text-center"><i class="fas fa-camera text-gray-200 mb-1"></i><p class="text-[8px] text-gray-300 font-bold">Upload</p></div><input type="file" @change="handleFileUpload" class="hidden" accept="image/*"></label></div>
+                    <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-black text-gray-400 mb-2">名稱</label><input v-model="shopForm.name" class="input-round"></div><div><label class="block text-xs font-black text-gray-400 mb-2">金額</label><input type="number" v-model="shopForm.price" class="input-round"></div></div>
                     <div class="flex gap-3 pt-4"><button v-if="isEditShop" @click="deleteShopItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div>
                 </div>
             </div>
         </div>
 
-        <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-6">
+        <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-6">
             <div class="bg-white w-full rounded-[35px] p-8 shadow-2xl">
                 <h3 class="text-lg font-black text-gray-800 mb-6 text-center">Edit Summary</h3>
                 <input v-model="tempSummary" class="input-round text-center font-bold">
@@ -237,7 +227,7 @@
         const db = firebase.database();
         const DATA_PATH = 'busan_trip_final';
 
-        createApp({
+        const app = createApp({
             components: { draggable: vuedraggable },
             data() {
                 return {
@@ -291,17 +281,15 @@
                 moveNote(idx, step) { const newIdx = idx + step; if(newIdx < 0 || newIdx >= this.travelNotes.length) return; const temp = this.travelNotes[idx]; this.travelNotes[idx] = this.travelNotes[newIdx]; this.travelNotes[newIdx] = temp; this.sync(); },
                 exportImage() {
                     const appElement = document.getElementById('app');
-                    const header = document.getElementById('header-area');
                     appElement.classList.add('export-mode');
-                    header.querySelectorAll('.export-only').forEach(el => el.style.display = 'block');
                     html2canvas(appElement, { useCORS: true, backgroundColor: "#f8fbfb", scale: 2, width: 375, windowWidth: 375 }).then(canvas => {
                         const link = document.createElement('a'); link.download = `Busan_Day${this.selectedDay}.png`; link.href = canvas.toDataURL('image/png'); link.click();
                         appElement.classList.remove('export-mode');
-                        header.querySelectorAll('.export-only').forEach(el => el.style.display = 'none');
                     });
                 }
             }
-        }).mount('#app');
+        });
+        app.mount('#app');
     </script>
 </body>
 </html>
