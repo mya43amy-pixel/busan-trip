@@ -40,6 +40,27 @@
         .type-toggle button { flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: bold; transition: 0.3s; }
         .type-toggle .active-income { background: #78B7BB; color: white; }
         .type-toggle .active-expense { background: #F87171; color: white; }
+
+        /* Bibi 專屬優化：禁止圖片長按跳出儲存選單 */
+        img, .handle { 
+            -webkit-touch-callout: none !important; 
+            -webkit-user-select: none !important;
+            user-select: none !important;
+        }
+        
+        /* 加大移動按鈕的感應範圍，但不影響外觀 */
+        .handle {
+            width: 44px !important;
+            height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            top: 0 !important;
+            left: 0 !important;
+            background: rgba(255,255,255,0.7) !important;
+            border-bottom-right-radius: 15px !important;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +130,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="flex justify-end px-2"><button @click="manageMembers" class="text-[10px] teal-text font-bold"><i class="fas fa-users-cog mr-1"></i>旅伴成員</button></div>
                 
                 <div class="space-y-3">
@@ -157,10 +177,10 @@
                         <i class="fas fa-chevron-down text-[10px] text-gray-300 transition-transform" :class="{'rotate-180': !collapsed[cat]}"></i>
                     </div>
                     <div v-show="!collapsed[cat]">
-                        <draggable v-model="shoppingList" item-key="id" handle=".handle" :delay="200" :touch-start-threshold="5" @end="sync" class="grid grid-cols-2 gap-3">
+                        <draggable v-model="shoppingList" item-key="id" handle=".handle" :delay="150" :touch-start-threshold="10" @end="sync" class="grid grid-cols-2 gap-3">
                             <template #item="{element}">
                                 <div v-if="element.category === cat" class="card-pop overflow-hidden border border-gray-50 relative flex flex-col" :class="{'card-bought': element.isBought}">
-                                    <div @click="editShopItem(element.id)" class="aspect-square bg-gray-50 flex items-center justify-center">
+                                    <div @click="editShopItem(element.id)" class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                                         <img v-if="element.imgBase64" :src="element.imgBase64" class="w-full h-full object-cover"><i v-else class="fas fa-shopping-bag text-gray-200 text-2xl"></i>
                                     </div>
                                     <div class="p-3">
@@ -168,7 +188,7 @@
                                         <p v-if="element.price > 0" class="teal-text font-black text-xs">₩ {{element.price.toLocaleString()}}</p>
                                         <p v-if="element.note" class="text-[9px] text-gray-400 mt-1 truncate">{{element.note}}</p>
                                     </div>
-                                    <div class="handle absolute top-2 left-2 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center text-gray-300 cursor-move"><i class="fas fa-bars text-[10px]"></i></div>
+                                    <div class="handle absolute text-gray-400 cursor-move"><i class="fas fa-bars text-[10px]"></i></div>
                                     <button @click.stop="toggleBought(element.id)" class="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-md bg-white/90" :class="element.isBought ? 'teal-theme text-white' : 'text-gray-300'"><i class="fas fa-check text-[10px]"></i></button>
                                 </div>
                             </template>
@@ -179,7 +199,7 @@
 
                 <div class="pt-6 border-t border-gray-100">
                     <h3 class="font-black text-gray-700 text-sm px-2 mb-4 uppercase tracking-widest">Memo / Links</h3>
-                    <draggable v-model="travelNotes" item-key="id" handle=".note-handle" :delay="200" @end="sync" class="space-y-3">
+                    <draggable v-model="travelNotes" item-key="id" handle=".note-handle" :delay="150" @end="sync" class="space-y-3">
                         <template #item="{element, index}">
                             <div class="memo-item shadow-sm flex items-start gap-3">
                                 <div class="note-handle text-gray-200 mt-1 cursor-move px-2"><i class="fas fa-bars text-xs"></i></div>
