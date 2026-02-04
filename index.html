@@ -19,19 +19,21 @@
         body { -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 4. 待買清單拖拽：背景不顯眼，但手把依然可用 */
+        /* 待買清單拖拽：手把極淡化 */
         .drag-handle {
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(2px);
             cursor: grab;
             transition: opacity 0.2s;
-            opacity: 0.3; /* 平時極淡 */
+            opacity: 0.3;
         }
         .drag-handle:hover { opacity: 0.8; }
         .drag-handle:active { cursor: grabbing; }
 
-        /* 防止瀏覽時誤觸拖動 */
         .shop-card { touch-action: pan-y; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-[#F8F9FA] font-sans antialiased text-gray-900">
@@ -180,9 +182,9 @@
     <script>
         const { createApp } = Vue;
         
-        // --- 請確認這裡的 Config 沒被你改掉 ---
+        // --- 請確認這裡的 Config 沒被妳改掉 ---
         const firebaseConfig = { 
-            // 把你原有的 apiKey 等資訊留在這
+            // 保持妳原本的設定
         };
         
         if (!firebase.apps.length) {
@@ -233,23 +235,15 @@
                 getCategoryIcon(c) {
                     return { 食物: 'fa-utensils', 購物: 'fa-bag-shopping', 交通: 'fa-taxi', 住宿: 'fa-hotel' }[c] || 'fa-won-sign';
                 },
-                
-                // 1. & 6. 修復新增按鈕點擊
                 openAddModal(tab) {
                     console.log('開啟新增彈窗:', tab);
-                    // 這裡接你原本的彈窗 show 邏輯，例如 this.isAddModalOpen = true
                 },
-
-                // 2. 修復編輯功能
                 editItem(item, type) {
                     console.log('編輯項目:', item, '類型:', type);
-                    // 這裡帶入 item 到你的編輯 Modal
                 },
-
                 toggleCheck(item) {
                     db.ref(`shopping/${item.id}`).update({ checked: !item.checked });
                 },
-
                 addCompanion() {
                     if (this.newCompanion) {
                         this.companions.push(this.newCompanion);
@@ -260,7 +254,6 @@
                 deleteItem(id, path) { db.ref(`${path}/${id}`).remove(); }
             },
             mounted() {
-                // Firebase 實時監聽 (保留你完整的資料讀取)
                 db.ref('plans').on('value', s => { this.plans = Object.values(s.val() || {}); });
                 db.ref('expenses').on('value', s => { this.expenses = Object.values(s.val() || {}); });
                 db.ref('memos').on('value', s => { this.memos = Object.values(s.val() || {}); });
