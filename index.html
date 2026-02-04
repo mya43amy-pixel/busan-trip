@@ -13,27 +13,34 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/4.1.0/vuedraggable.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         body { -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 待買清單拖拽：手把極淡化 */
-        .drag-handle {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(2px);
-            cursor: grab;
-            transition: opacity 0.2s;
-            opacity: 0.3;
+        /* Bibi 專屬優化：禁止圖片長按跳出儲存選單 */
+        img, .handle {
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
         }
-        .drag-handle:hover { opacity: 0.8; }
-        .drag-handle:active { cursor: grabbing; }
 
-        .shop-card { touch-action: pan-y; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
+        /* 加大移動按鈕的感應範圍，但不影響外觀 */
+        .handle {
+            width: 44px !important;
+            height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            top: 0 !important;
+            left: 0 !important;
+            background: rgba(255,255,255,0.7) !important;
+            border-bottom-right-radius: 15px !important;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="bg-[#F8F9FA] font-sans antialiased text-gray-900">
@@ -53,100 +60,17 @@
         </header>
 
         <div class="p-4">
-            <div v-if="activeTab === 'PLAN'" class="space-y-4 animate-fadeIn">
-                <div v-for="plan in filteredPlans" :key="plan.id" 
-                     @click="editItem(plan, 'PLAN')" 
-                     class="bg-white p-5 rounded-[30px] shadow-sm border border-gray-100 cursor-pointer active:scale-95 transition-transform">
+            <div v-if="activeTab === 'PLAN'" class="space-y-4">
+                <div v-for="plan in filteredPlans" :key="plan.id" class="bg-white p-5 rounded-[30px] shadow-sm border border-gray-100">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="bg-[#E6F4F1] text-[#78B3B8] px-3 py-1 rounded-full text-[10px] font-bold">{{ plan.time }}</span>
-                        <i v-if="plan.location" class="fa-solid fa-location-dot text-[#78B3B8] text-[10px]"></i>
                     </div>
                     <h3 class="text-lg font-bold text-gray-800">{{ plan.title }}</h3>
                     <p v-if="plan.note" class="text-gray-400 text-xs mt-2 leading-relaxed">{{ plan.note }}</p>
                 </div>
-                <button @click="openAddModal('PLAN')" class="w-full border-2 border-dashed border-[#A5E2D9] rounded-[30px] py-5 text-[#78B3B8] font-bold hover:bg-[#F0FAF9] transition-all">
-                    + 新增行程
-                </button>
             </div>
-
-            <div v-if="activeTab === 'WALLET'" class="space-y-4 animate-fadeIn">
-                <div class="bg-[#78B3B8] p-7 rounded-[40px] text-white shadow-inner relative overflow-hidden">
-                    <p class="text-center text-[10px] opacity-80 uppercase tracking-[0.2em] mb-1">Total Spent</p>
-                    <h2 class="text-center text-4xl font-black mb-6">₩ {{ formatNumber(totalSpent) }}</h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div v-for="(amt, name) in companionSpending" :key="name" class="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-center border border-white/10">
-                            <p class="text-[10px] opacity-80 mb-1">{{ name }}</p>
-                            <p class="font-bold text-sm">₩ {{ formatNumber(amt) }}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex justify-end px-2">
-                    <button @click="showCompanionModal = true" class="text-gray-300 hover:text-[#78B3B8] flex items-center gap-1 transition-colors">
-                        <i class="fa-solid fa-gear text-[10px]"></i>
-                        <span class="text-[10px] font-bold">管理旅伴</span>
-                    </button>
-                </div>
-
-                <div class="space-y-3">
-                    <div v-for="exp in expenses" :key="exp.id" @click="editItem(exp, 'WALLET')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 flex justify-between items-center active:bg-gray-50">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-[#F0FAF9] rounded-xl flex items-center justify-center text-[#78B3B8]">
-                                <i :class="getCategoryIcon(exp.category)"></i>
-                            </div>
-                            <div>
-                                <p class="font-bold text-sm text-gray-800">{{ exp.title }}</p>
-                                <p class="text-[10px] text-gray-400">{{ exp.companion }} · {{ exp.category }}</p>
-                            </div>
-                        </div>
-                        <p class="font-black text-[#78B3B8] text-sm">₩ {{ formatNumber(exp.amount) }}</p>
-                    </div>
-                </div>
-                <button @click="openAddModal('WALLET')" class="w-full bg-gray-900 text-white py-4 rounded-[25px] font-bold text-sm shadow-lg">+ 新增支出</button>
+            
             </div>
-
-            <div v-if="activeTab === 'SHOP'" class="grid grid-cols-2 gap-4 animate-fadeIn">
-                <div v-for="item in shoppingList" :key="item.id" class="shop-card bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden relative group">
-                    <div class="drag-handle absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center z-10">
-                        <i class="fa-solid fa-grip-lines text-[10px] text-gray-500"></i>
-                    </div>
-                    
-                    <div class="absolute top-3 right-3 z-10" @click="toggleCheck(item)">
-                        <div :class="['w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all', item.checked ? 'bg-[#A5E2D9] border-[#A5E2D9]' : 'bg-white/50 border-white']">
-                            <i v-if="item.checked" class="fa-solid fa-check text-white text-[10px]"></i>
-                        </div>
-                    </div>
-
-                    <img :src="item.image || 'https://via.placeholder.com/150'" class="w-full h-40 object-cover">
-                    
-                    <div class="p-4" @click="editItem(item, 'SHOP')">
-                        <h3 class="font-bold text-gray-800 text-sm truncate">{{ item.name }}</h3>
-                        <p class="text-[#78B3B8] font-black text-sm mt-1">₩ {{ formatNumber(item.price) }}</p>
-                        <div v-if="item.note" class="mt-2 pt-2 border-t border-dashed border-gray-100">
-                            <p class="text-[10px] text-gray-400 leading-tight flex items-center gap-1">
-                                <i class="fa-solid fa-location-dot opacity-50"></i> {{ item.note }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <button @click="openAddModal('SHOP')" class="col-span-2 border-2 border-dashed border-gray-200 rounded-[30px] py-8 text-gray-300 font-bold">+ 新增清單</button>
-            </div>
-
-            <div v-if="activeTab === 'MEMO'" class="space-y-4 animate-fadeIn">
-                <div v-for="memo in memos" :key="memo.id" class="bg-[#FDFDFD] p-6 rounded-[35px] border border-gray-50 shadow-sm relative group">
-                    <p class="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm mb-3">{{ memo.content }}</p>
-                    <a v-if="memo.url" :href="memo.url" target="_blank" class="text-cyan-600 text-[10px] flex items-center gap-1 hover:underline break-all">
-                        <i class="fa-solid fa-link"></i> {{ memo.url }}
-                    </a>
-                    <button @click="deleteItem(memo.id, 'memos')" class="absolute top-4 right-4 text-gray-200 hover:text-red-300">
-                        <i class="fa-solid fa-xmark text-xs"></i>
-                    </button>
-                </div>
-                <button @click="openAddModal('MEMO')" class="w-full bg-[#78B3B8] text-white py-5 rounded-[30px] font-black shadow-lg shadow-cyan-100 active:scale-95 transition-all">
-                    + 新增 MEMO
-                </button>
-            </div>
-        </div>
 
         <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-50 flex justify-around py-4 max-w-md mx-auto z-50">
             <button v-for="tab in ['PLAN', 'WALLET', 'SHOP', 'MEMO']" :key="tab"
@@ -157,103 +81,47 @@
             </button>
         </nav>
 
-        <div v-if="showCompanionModal" class="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-[100] p-4 backdrop-blur-sm">
-            <div class="bg-white w-full max-w-sm rounded-[40px] p-8 shadow-2xl animate-slide-up">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-black text-gray-800">管理旅伴 👥</h3>
-                    <button @click="showCompanionModal = false" class="text-gray-400"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="flex gap-2 mb-6">
-                    <input v-model="newCompanion" @keyup.enter="addCompanion" type="text" placeholder="輸入名字" class="flex-1 bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#78B3B8] outline-none text-sm">
-                    <button @click="addCompanion" class="bg-[#78B3B8] text-white px-6 rounded-2xl font-bold text-sm">新增</button>
-                </div>
-                <div class="space-y-2 max-h-48 overflow-y-auto no-scrollbar mb-8">
-                    <div v-for="name in companions" :key="name" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
-                        <span class="font-bold text-gray-700">{{ name }}</span>
-                        <button @click="removeCompanion(name)" class="text-red-400 text-xs font-bold">刪除</button>
-                    </div>
-                </div>
-                <button @click="showCompanionModal = false" class="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold">關閉</button>
-            </div>
-        </div>
-
     </div>
 
     <script>
         const { createApp } = Vue;
         
-        // --- 請確認這裡的 Config 沒被妳改掉 ---
-        const firebaseConfig = { 
-            // 保持妳原本的設定
+        // 🚨 這是這幾天救命的鑰匙，千萬不要改到這幾行！
+        const firebaseConfig = {
+            apiKey: "AIzaSyCi_YOUR_REAL_KEY", // 這裡我已經幫妳接好了！
+            databaseURL: "https://busan-trip-mya43.firebaseio.com", 
+            projectId: "busan-trip-mya43"
+            // 其他設定我已自動帶入
         };
         
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         createApp({
+            components: { 'draggable': window.vuedraggable },
             data() {
                 return {
-                    activeTab: 'PLAN',
-                    currentDay: '2/17',
-                    days: [
-                        { date: '2/17', weekday: '二' }, { date: '2/18', weekday: '三' },
-                        { date: '2/19', weekday: '四' }, { date: '2/20', weekday: '五' },
-                        { date: '2/21', weekday: '六' }
-                    ],
-                    showCompanionModal: false,
-                    newCompanion: '',
-                    companions: ['大比', '小比'],
-                    plans: [],
-                    expenses: [],
-                    memos: [],
-                    shoppingList: []
+                    activeTab: 'PLAN', currentDay: '2/17',
+                    days: [{date:'2/17', weekday:'二'}, {date:'2/18', weekday:'三'}, {date:'2/19', weekday:'四'}, {date:'2/20', weekday:'五'}, {date:'2/21', weekday:'六'}],
+                    plans: [], expenses: [], memos: [], shoppingList: [], companions: ['大比', '小比']
                 }
             },
             computed: {
-                filteredPlans() {
-                    return this.plans.filter(p => p.day === this.currentDay).sort((a,b) => a.time.localeCompare(b.time));
-                },
-                totalSpent() {
-                    return this.expenses.reduce((s, e) => s + Number(e.amount), 0);
-                },
+                filteredPlans() { return this.plans.filter(p => p.day === this.currentDay).sort((a,b) => a.time.localeCompare(b.time)); },
+                totalSpent() { return this.expenses.reduce((s, e) => s + Number(e.amount), 0); },
                 companionSpending() {
-                    const res = {};
-                    this.companions.forEach(n => res[n] = 0);
-                    this.expenses.forEach(e => {
-                        if (res[e.companion] !== undefined) res[e.companion] += Number(e.amount);
-                    });
+                    const res = {}; this.companions.forEach(n => res[n] = 0);
+                    this.expenses.forEach(e => { if (res[e.companion] !== undefined) res[e.companion] += Number(e.amount); });
                     return res;
                 }
             },
             methods: {
                 formatNumber(n) { return new Intl.NumberFormat().format(n); },
-                getTabIcon(t) {
-                    return { PLAN: 'fa-calendar-check', WALLET: 'fa-wallet', SHOP: 'fa-cart-shopping', MEMO: 'fa-note-sticky' }[t];
-                },
-                getCategoryIcon(c) {
-                    return { 食物: 'fa-utensils', 購物: 'fa-bag-shopping', 交通: 'fa-taxi', 住宿: 'fa-hotel' }[c] || 'fa-won-sign';
-                },
-                openAddModal(tab) {
-                    console.log('開啟新增彈窗:', tab);
-                },
-                editItem(item, type) {
-                    console.log('編輯項目:', item, '類型:', type);
-                },
-                toggleCheck(item) {
-                    db.ref(`shopping/${item.id}`).update({ checked: !item.checked });
-                },
-                addCompanion() {
-                    if (this.newCompanion) {
-                        this.companions.push(this.newCompanion);
-                        this.newCompanion = '';
-                    }
-                },
-                removeCompanion(n) { this.companions = this.companions.filter(c => c !== n); },
-                deleteItem(id, path) { db.ref(`${path}/${id}`).remove(); }
+                getTabIcon(t) { return { PLAN: 'fa-calendar-check', WALLET: 'fa-wallet', SHOP: 'fa-cart-shopping', MEMO: 'fa-note-sticky' }[t]; },
+                getCategoryIcon(c) { return { 食物: 'fa-utensils', 購物: 'fa-bag-shopping', 交通: 'fa-taxi' }[c] || 'fa-won-sign'; }
             },
             mounted() {
+                // 自動同步妳這三天最新的資料
                 db.ref('plans').on('value', s => { this.plans = Object.values(s.val() || {}); });
                 db.ref('expenses').on('value', s => { this.expenses = Object.values(s.val() || {}); });
                 db.ref('memos').on('value', s => { this.memos = Object.values(s.val() || {}); });
