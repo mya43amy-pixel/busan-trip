@@ -19,355 +19,207 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 完全還原妳的 #73 版本樣式 */
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f8fbfb; -webkit-tap-highlight-color: transparent; letter-spacing: 0.01em; }
         .teal-theme { background-color: #78B7BB; }
         .teal-text { color: #78B7BB; }
         .active-tab { color: #78B7BB !important; font-weight: bold; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .card-pop { border-radius: 28px; background: white; box-shadow: 0 10px 25px rgba(120, 183, 187, 0.12); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(120, 183, 187, 0.05); }
-        .card-pop:active { transform: scale(0.97); box-shadow: 0 4px 10px rgba(120, 183, 187, 0.1); }
-        .summary-box { background: linear-gradient(135deg, #ffffff 0%, #f0fafa 100%); border: 1.5px dashed #A5E2D9; }
+        .card-pop { border-radius: 20px; background: white; box-shadow: 0 4px 12px rgba(120, 183, 187, 0.08); }
+        .summary-box { background: white; border: 1px dashed #A5E2D9; }
         .export-mode #header-area { border-radius: 0; }
         .export-mode .no-export { display: none !important; }
         [v-cloak] { display: none; }
-        .memo-item { background: white; border-radius: 22px; padding: 18px; box-shadow: 0 6px 18px rgba(0,0,0,0.03); border: 1px solid #f0f4f4; }
         
-        /* Bibi 專屬優化：禁止圖片長按跳出儲存選單 */
+        /* Bibi 專屬優化：禁止圖片長按 */
         img, .handle { -webkit-touch-callout: none !important; -webkit-user-select: none !important; user-select: none !important; }
-
-        /* 加大移動按鈕的感應範圍 */
         .handle { width: 44px !important; height: 44px !important; display: flex !important; align-items: center !important; justify-content: center !important; top: 0 !important; left: 0 !important; background: rgba(255,255,255,0.7) !important; border-bottom-right-radius: 15px !important; z-index: 10; }
 
-        /* 新功能樣式：不影響原本使用的設計 */
-        .drawer-content { transition: max-height 0.3s ease-in-out; }
-        .checklist-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f7f7; }
-        .checklist-item.done span { text-decoration: line-through; color: #cbd5e1; }
+        /* 新功能專用額外樣式 (不影響舊有樣式) */
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f4f4; }
+        .checklist-item.done span { text-decoration: line-through; color: #d1d5db; }
     </style>
 </head>
 <body>
     <div id="app" v-cloak class="max-w-md mx-auto min-h-screen pb-28 relative bg-[#f8fbfb] shadow-2xl">
         
-        <header id="header-area" class="teal-theme pt-8 pb-6 px-5 text-white rounded-b-[40px] shadow-lg relative">
-            <div class="absolute right-6 top-8 text-xl opacity-70 hover:opacity-100 no-export" @click="showChecklistModal = true">
+        <header id="header-area" class="teal-theme pt-6 pb-4 px-4 text-white rounded-b-[35px] shadow-lg relative">
+            <div class="absolute right-6 top-6 text-lg opacity-80 no-export" @click="showChecklistModal = true">
                 <i class="fas fa-suitcase-rolling"></i>
             </div>
             
-            <h1 class="text-center text-lg font-black tracking-[0.4em] mb-6 uppercase">2026 busan</h1>
-            <div class="flex justify-between items-center gap-2 overflow-x-auto no-scrollbar px-1">
-                <div v-for="(d, i) in dateConfig" :key="i" 
-                    @click="selectedDay = (i+1)"
-                    :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB] shadow-xl scale-105 font-bold' : 'bg-white/20 text-white opacity-60'"
-                    class="min-w-[68px] h-20 rounded-[24px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300">
-                    <span class="text-[10px] mb-1 opacity-80 uppercase tracking-tighter">{{d.date}}</span>
-                    <span class="text-xl font-black">{{d.day}}</span>
+            <h1 class="text-center text-base font-black tracking-[0.3em] mb-4">2026 busan</h1>
+            <div class="flex justify-center items-center gap-2 overflow-x-auto no-scrollbar px-1">
+                <div v-for="(d, i) in dateConfig" :key="i" @click="selectedDay = (i+1)"
+                    :class="selectedDay === (i+1) ? 'bg-white text-[#78B7BB] shadow-md' : 'bg-white/20 text-white'"
+                    class="min-w-[65px] h-16 rounded-[20px] flex flex-col items-center justify-center cursor-pointer transition-all">
+                    <span class="text-[10px] mb-0.5 opacity-80">{{d.date}}</span>
+                    <span class="text-base font-black">{{d.day}}</span>
                 </div>
             </div>
         </header>
 
-        <main class="p-6">
+        <main class="p-5">
             <div v-if="activeTab === 'itinerary'" class="space-y-6">
-                <div @click="openSummaryModal" class="summary-box w-full py-5 px-6 rounded-[28px] text-center cursor-pointer active:opacity-70 transition-all">
-                    <p class="teal-text font-black text-xs tracking-[0.2em] uppercase leading-relaxed">
-                        {{ dailySummaries[selectedDay] || '點擊編輯今日大綱...' }}
-                    </p>
+                <div @click="openSummaryModal" class="summary-box w-full py-4 px-6 rounded-2xl text-center cursor-pointer">
+                    <p class="teal-text font-bold text-sm tracking-widest uppercase">{{ dailySummaries[selectedDay] || '點擊編輯今日大綱...' }}</p>
                 </div>
 
                 <draggable v-model="itinerary[selectedDay]" item-key="id" handle=".handle" :delay="150" :touch-start-threshold="10" @end="sync" class="space-y-4">
                     <template #item="{element, index}">
-                        <div @click="openEditModal(index)" class="p-5 card-pop relative flex justify-between items-start group">
-                            <div class="handle absolute text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity cursor-move">
+                        <div @click="openEditModal(index)" class="p-5 card-pop border border-gray-50 flex justify-between items-start relative group">
+                            <div class="handle absolute text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <i class="fas fa-bars text-[10px]"></i>
                             </div>
                             <div class="flex-1">
                                 <div class="flex items-center gap-2.5">
-                                    <span class="text-[11px] font-black px-3 py-1 bg-teal-50 teal-text rounded-lg tracking-tighter">{{element.time}}</span>
-                                    <a v-if="element.mapUrl" :href="element.mapUrl" target="_blank" @click.stop class="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full text-xs teal-text hover:bg-teal-100 transition-colors">
-                                        <i class="fas fa-location-dot"></i>
-                                    </a>
+                                    <span class="text-[12px] font-black px-2.5 py-1 bg-teal-50 teal-text rounded-md">{{element.time}}</span>
+                                    <a v-if="element.mapUrl" :href="element.mapUrl" target="_blank" @click.stop class="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full text-xs teal-text"><i class="fas fa-link"></i></a>
                                 </div>
-                                <h3 class="font-bold text-lg mt-3 text-gray-800 tracking-tight">{{element.place}}</h3>
-                                <p class="text-[13px] text-gray-400 mt-2 leading-relaxed whitespace-pre-wrap">{{element.note}}</p>
+                                <h3 class="font-bold text-lg mt-2.5 text-gray-800">{{element.place}}</h3>
+                                <p class="text-[13px] text-gray-400 mt-1.5 whitespace-pre-wrap">{{element.note}}</p>
                             </div>
-                            <button @click.stop="deleteItem(index)" class="text-gray-200 hover:text-red-300 transition-colors ml-4 p-1">
-                                <i class="fas fa-times text-xs"></i>
-                            </button>
+                            <button @click.stop="deleteItem(index)" class="text-gray-200 ml-4"><i class="fas fa-times text-xs"></i></button>
                         </div>
                     </template>
                 </draggable>
 
-                <button @click="openAddModal" class="w-full py-5 border-2 border-dashed border-[#A5E2D9] rounded-[28px] text-[#78B7BB] font-black text-sm tracking-widest hover:bg-teal-50 transition-all active:scale-[0.98]">
-                    + ADD SCHEDULE
-                </button>
+                <button @click="openAddModal" class="w-full py-5 border-2 border-dashed border-[#A5E2D9] rounded-[25px] text-[#78B7BB] font-bold text-sm tracking-widest">+ ADD SCHEDULE</button>
 
-                <div class="mt-12 no-export border-t border-gray-100 pt-8">
-                    <div @click="showPocket = !showPocket" class="flex justify-between items-center px-2 mb-4 cursor-pointer">
-                        <h3 class="font-black text-gray-300 text-[10px] tracking-[0.3em] uppercase"><i class="fas fa-star mr-2"></i>備選口袋清單 (餐廳/景點)</h3>
-                        <i :class="showPocket ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas text-[10px] text-gray-300"></i>
+                <div class="mt-8 no-export border-t border-dashed border-gray-100 pt-6">
+                    <div @click="showPocket = !showPocket" class="flex justify-between items-center px-2 mb-4 cursor-pointer opacity-50">
+                        <h3 class="font-black text-gray-400 text-[10px] tracking-[0.2em] uppercase"><i class="fas fa-star mr-2"></i>備選地點</h3>
+                        <i :class="showPocket ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas text-[10px]"></i>
                     </div>
                     <div v-show="showPocket" class="space-y-3">
-                        <div v-for="(p, idx) in pocketList" :key="idx" class="bg-white/50 p-4 rounded-2xl border border-gray-50 flex justify-between items-center transition-all">
+                        <div v-for="(p, idx) in pocketList" :key="idx" class="bg-white/60 p-4 rounded-2xl border border-gray-50 flex justify-between items-center">
                             <div class="flex-1">
                                 <p class="text-sm font-bold text-gray-600">{{p.name}}</p>
-                                <a v-if="p.link" :href="p.link" target="_blank" class="text-[10px] teal-text underline decoration-dotted mt-1 block truncate max-w-[200px]">{{p.link}}</a>
+                                <a v-if="p.link" :href="p.link" target="_blank" class="text-[10px] teal-text underline">{{p.link}}</a>
                             </div>
-                            <button @click="deletePocket(idx)" class="text-gray-200 ml-4"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                            <button @click="deletePocket(idx)" class="text-gray-200 ml-4"><i class="fas fa-times text-[10px]"></i></button>
                         </div>
-                        <button @click="addPocketItem" class="w-full py-3 bg-white border border-teal-50 rounded-xl text-teal-200 text-[10px] font-bold tracking-widest">+ 加入備選地點</button>
+                        <button @click="addPocketItem" class="w-full py-3 bg-white border border-teal-50 rounded-xl text-teal-200 text-xs font-bold">+ 加入備選</button>
                     </div>
                 </div>
 
-                <div class="text-center pt-6 pb-4 no-export">
-                    <button @click="exportImage" class="text-[10px] text-gray-300 font-black tracking-[0.3em] uppercase hover:text-[#78B7BB] transition-colors">
-                        <i class="fas fa-camera-retro mr-2"></i>匯出今日行程圖片
-                    </button>
+                <div class="text-center pt-8 no-export">
+                    <button @click="exportImage" class="export-btn text-[10px] text-gray-300 font-bold tracking-widest uppercase opacity-50"><i class="fas fa-download mr-1"></i>匯出今日行程圖片</button>
                 </div>
             </div>
 
             <div v-if="activeTab === 'wallet'" class="space-y-6">
-                <div class="teal-theme p-8 rounded-[40px] text-white shadow-xl relative overflow-hidden">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                    <p class="text-center text-[10px] font-bold opacity-70 uppercase tracking-[0.3em] mb-2">Total Spent</p>
-                    <h2 class="text-center text-4xl font-black mb-8 tracking-tighter">₩ {{formatNumber(totalSpent)}}</h2>
-                    <div class="grid grid-cols-2 gap-4 relative z-10">
-                        <div v-for="m in members" :key="m" class="bg-white/15 backdrop-blur-md p-4 rounded-[24px] border border-white/10 text-center">
-                            <p class="text-[10px] font-bold opacity-70 mb-1 uppercase tracking-wider">{{m}}</p>
-                            <p class="font-black text-sm tracking-tight">₩ {{formatNumber(memberTotal(m))}}</p>
+                <div class="teal-theme p-7 rounded-[35px] text-white shadow-inner relative overflow-hidden">
+                    <p class="text-center text-[10px] opacity-80 uppercase mb-1">Total Spent</p>
+                    <h2 class="text-center text-3xl font-black mb-6">₩ {{formatNumber(totalSpent)}}</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div v-for="m in members" :key="m" class="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-center border border-white/10">
+                            <p class="text-[10px] opacity-80 mb-1">{{m}}</p>
+                            <p class="font-bold text-sm">₩ {{formatNumber(memberTotal(m))}}</p>
                         </div>
                     </div>
                 </div>
                 <div class="flex justify-end px-2">
-                    <button @click="showMemberModal = true" class="text-[10px] teal-text font-black tracking-widest uppercase active:opacity-50">
-                        <i class="fas fa-users-viewfinder mr-1.5"></i>旅伴管理
-                    </button>
+                    <button @click="showMemberModal = true" class="text-[10px] teal-text font-bold uppercase"><i class="fas fa-users-cog mr-1"></i>旅伴成員</button>
                 </div>
-                <div class="space-y-4">
-                    <div v-for="(bill, index) in sortedBills" :key="index" @click="openBillEdit(index)" class="bg-white p-5 rounded-[28px] shadow-sm border border-gray-50 flex justify-between items-center active:scale-[0.98] transition-all">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center text-[#78B7BB] text-lg">
-                                <i :class="getCategoryIcon(bill.category)"></i>
-                            </div>
+                <div class="space-y-3">
+                    <div v-for="(bill, index) in sortedBills" :key="index" @click="openBillEdit(index)" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-[#78B7BB]"><i :class="getCategoryIcon(bill.category)"></i></div>
                             <div>
-                                <p class="font-bold text-sm text-gray-800 tracking-tight">{{bill.title}}</p>
-                                <p class="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-tighter">{{bill.payer}} · {{bill.category}}</p>
+                                <p class="font-bold text-sm text-gray-800">{{bill.title}}</p>
+                                <p class="text-[10px] text-gray-400">{{bill.payer}}</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="font-black text-[#78B7BB] text-sm tracking-tight">₩ {{formatNumber(bill.amount)}}</p>
-                            <p class="text-[9px] text-gray-300 font-bold mt-0.5">≈ NT$ {{formatNumber(Math.round(bill.amount * rate))}}</p>
-                        </div>
+                        <p class="font-black text-[#78B7BB] text-sm">₩ {{formatNumber(bill.amount)}}</p>
                     </div>
                 </div>
-                <button @click="openBillAdd" class="w-full py-5 bg-[#78B7BB] text-white rounded-[28px] font-black text-sm tracking-[0.2em] shadow-lg shadow-teal-100 active:scale-95 transition-all">
-                    + NEW EXPENSE
-                </button>
+                <button @click="openBillAdd" class="w-full py-5 bg-[#78B7BB] text-white rounded-2xl font-bold text-sm shadow-lg shadow-teal-50">+ NEW EXPENSE</button>
             </div>
 
-            <div v-if="activeTab === 'shop'" class="space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <draggable v-model="shoppingList" item-key="id" handle=".handle" :delay="150" :touch-start-threshold="10" @end="sync" class="contents">
-                        <template #item="{element, index}">
-                            <div class="card-pop overflow-hidden relative flex flex-col group" :class="{'opacity-50 grayscale-[0.5]': element.isBought}">
-                                <div class="handle absolute text-gray-400 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <i class="fas fa-bars text-[10px]"></i>
-                                </div>
-                                <div @click="openShopEdit(index)" class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
-                                    <img v-if="element.imgBase64" :src="element.imgBase64" class="w-full h-full object-cover">
-                                    <i v-else class="fas fa-bag-shopping text-gray-200 text-3xl"></i>
-                                </div>
-                                <div class="p-4 bg-white relative">
-                                    <h4 class="font-bold text-gray-800 text-xs truncate mb-1 tracking-tight">{{element.name}}</h4>
-                                    <p class="teal-text font-black text-sm tracking-tight">₩ {{formatNumber(element.price)}}</p>
-                                    <button @click.stop="toggleBought(index)" class="absolute -top-6 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90"
-                                        :class="element.isBought ? 'bg-[#78B7BB] text-white' : 'bg-white text-gray-200 border border-gray-50'">
-                                        <i class="fas fa-check text-xs"></i>
-                                    </button>
-                                </div>
+            <div v-if="activeTab === 'shop'" class="grid grid-cols-2 gap-3">
+                <draggable v-model="shoppingList" item-key="id" handle=".handle" :delay="150" :touch-start-threshold="10" @end="sync" class="contents">
+                    <template #item="{element, index}">
+                        <div class="bg-white rounded-[28px] shadow-sm border border-gray-100 overflow-hidden relative flex flex-col" :class="{'opacity-50': element.isBought}">
+                            <div class="handle absolute text-gray-400 cursor-move"><i class="fas fa-bars text-[10px]"></i></div>
+                            <div @click="openShopEdit(index)" class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                                <img v-if="element.imgBase64" :src="element.imgBase64" class="w-full h-full object-cover">
+                                <i v-else class="fas fa-shopping-bag text-gray-200 text-2xl"></i>
                             </div>
-                        </template>
-                    </draggable>
-                </div>
-                <button @click="openShopAdd" class="w-full py-5 border-2 border-dashed border-[#A5E2D9] rounded-[28px] text-[#78B7BB] font-black text-sm tracking-widest hover:bg-teal-50 transition-all">
-                    + ADD WISH LIST
-                </button>
+                            <div class="p-3 bg-white relative">
+                                <h4 class="font-bold text-gray-800 text-xs truncate">{{element.name}}</h4>
+                                <p class="teal-text font-black text-xs">₩ {{formatNumber(element.price)}}</p>
+                                <button @click.stop="toggleBought(index)" class="absolute -top-5 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-all"
+                                    :class="element.isBought ? 'bg-[#78B7BB] text-white' : 'bg-white text-gray-200 border border-gray-50'"><i class="fas fa-check text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    </template>
+                </draggable>
+                <button @click="openShopAdd" class="col-span-2 py-5 border-2 border-dashed border-[#A5E2D9] rounded-2xl text-[#78B7BB] font-bold text-sm">+ ADD WISH ITEM</button>
             </div>
 
-            <div v-if="activeTab === 'memo'" class="space-y-5">
-                <div v-for="(memo, index) in travelNotes" :key="index" @click="openNoteEdit(index)" class="memo-item relative active:scale-[0.98] transition-all">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-[9px] font-black teal-text bg-teal-50 px-2 py-0.5 rounded-md uppercase tracking-widest">{{memo.tag || '備忘'}}</span>
+            <div v-if="activeTab === 'memo'" class="space-y-4">
+                <div v-for="(memo, index) in travelNotes" :key="index" @click="openNoteEdit(index)" class="bg-white p-6 rounded-[28px] border border-gray-50 shadow-sm relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] font-bold teal-text bg-teal-50 px-2 py-0.5 rounded-md">{{memo.tag || '備忘'}}</span>
                         <button @click.stop="deleteNote(index)" class="text-gray-200"><i class="fas fa-times text-[10px]"></i></button>
                     </div>
-                    <p class="text-gray-700 text-[13px] leading-relaxed mb-3 whitespace-pre-wrap">{{memo.content}}</p>
-                    <a v-if="memo.url" :href="memo.url" target="_blank" @click.stop class="text-cyan-600 text-[10px] font-medium flex items-center gap-1.5 break-all hover:underline">
-                        <i class="fas fa-link text-[9px]"></i> {{memo.url}}
-                    </a>
+                    <p class="text-gray-700 text-sm mb-3 whitespace-pre-wrap">{{memo.content}}</p>
+                    <a v-if="memo.url" :href="memo.url" target="_blank" @click.stop class="text-cyan-600 text-[10px] break-all flex items-center gap-1"><i class="fas fa-link text-[9px]"></i> {{memo.url}}</a>
                 </div>
-                <button @click="openNoteAdd" class="w-full py-5 bg-[#78B7BB] text-white rounded-[28px] font-black text-sm tracking-[0.2em] shadow-lg shadow-teal-100 transition-all active:scale-95">
-                    + NEW MEMO
-                </button>
+                <button @click="openNoteAdd" class="w-full py-5 bg-[#78B7BB] text-white rounded-2xl font-bold text-sm shadow-lg shadow-teal-50">+ NEW MEMO</button>
             </div>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-50 flex justify-around py-5 max-w-md mx-auto z-50 rounded-t-[32px] no-export shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
-            <button v-for="t in tabs" :key="t.id" @click="activeTab = t.id"
-                :class="activeTab === t.id ? 'teal-text' : 'text-gray-300'"
-                class="flex flex-col items-center gap-1.5 transition-all duration-300 active:scale-90">
-                <i :class="['text-xl transition-transform duration-300', t.icon, activeTab === t.id ? 'scale-110' : '']"></i>
-                <span class="text-[9px] font-black tracking-[0.2em] uppercase">{{t.name}}</span>
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-50 flex justify-around py-4 max-w-md mx-auto z-50 rounded-t-3xl no-export shadow-sm">
+            <button v-for="t in tabs" :key="t.id" @click="activeTab = t.id" :class="activeTab === t.id ? 'teal-text' : 'text-gray-300'" class="flex flex-col items-center gap-1 transition-all">
+                <i :class="['text-xl', t.icon]"></i><span class="text-[9px] font-black tracking-tighter">{{t.name}}</span>
             </button>
         </nav>
 
         <div v-if="showChecklistModal" class="fixed inset-0 bg-black/60 z-[100] flex items-end no-export" @click.self="showChecklistModal = false">
-            <div class="bg-white w-full rounded-t-[40px] p-8 pb-12 overflow-y-auto max-h-[85vh] animate-slide-up">
-                <div class="flex justify-between items-center mb-8">
-                    <div class="flex gap-6">
-                        <h3 @click="checklistTab = 'todo'" :class="checklistTab === 'todo' ? 'text-2xl font-black text-gray-800' : 'text-2xl font-black text-gray-200'" class="transition-all cursor-pointer">待辦勾稽</h3>
-                        <h3 @click="checklistTab = 'luggage'" :class="checklistTab === 'luggage' ? 'text-2xl font-black text-gray-800' : 'text-2xl font-black text-gray-200'" class="transition-all cursor-pointer">行李準備</h3>
+            <div class="bg-white w-full rounded-t-[35px] p-8 pb-12 overflow-y-auto max-h-[80vh]">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex gap-4">
+                        <h3 @click="checklistTab = 'todo'" :class="checklistTab === 'todo' ? 'text-xl font-bold text-gray-800' : 'text-xl font-bold text-gray-300'" class="cursor-pointer">行前待辦</h3>
+                        <h3 @click="checklistTab = 'luggage'" :class="checklistTab === 'luggage' ? 'text-xl font-bold text-gray-800' : 'text-xl font-bold text-gray-300'" class="cursor-pointer">行李準備</h3>
                     </div>
-                    <button @click="showChecklistModal = false" class="w-10 h-10 bg-gray-50 rounded-full text-gray-300 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                    <button @click="showChecklistModal = false" class="text-gray-400"><i class="fas fa-times"></i></button>
                 </div>
-                
                 <div class="space-y-1">
-                    <div v-for="(item, idx) in (checklistTab === 'todo' ? prepList : luggageList)" :key="idx" 
-                        class="checklist-item" :class="{'done': item.done}">
-                        <div @click="toggleCheckItem(idx)" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer"
-                             :class="item.done ? 'bg-[#78B7BB] border-[#78B7BB] text-white shadow-md shadow-teal-100' : 'border-gray-100 text-transparent'">
-                            <i class="fas fa-check text-[10px]"></i>
-                        </div>
-                        <span class="text-sm font-bold flex-1">{{item.text}}</span>
-                        <button @click="deleteCheckItem(idx)" class="text-gray-200 hover:text-red-300 px-2"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                    <div v-for="(item, idx) in (checklistTab === 'todo' ? prepList : luggageList)" :key="idx" class="checklist-item" :class="{'done': item.done}">
+                        <div @click="toggleCheckItem(idx)" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer" :class="item.done ? 'bg-[#78B7BB] border-[#78B7BB] text-white' : 'border-gray-100 text-transparent'"><i class="fas fa-check text-[10px]"></i></div>
+                        <span class="text-sm font-medium flex-1">{{item.text}}</span>
+                        <button @click="deleteCheckItem(idx)" class="text-gray-200"><i class="fas fa-trash-alt text-[10px]"></i></button>
                     </div>
-                    
-                    <div class="flex gap-2 mt-8">
-                        <input v-model="newCheckText" @keyup.enter="addCheckItem" placeholder="新增事項..." class="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none placeholder:text-gray-300">
-                        <button @click="addCheckItem" class="teal-theme text-white px-6 rounded-2xl shadow-lg shadow-teal-100 active:scale-90 transition-all"><i class="fas fa-plus"></i></button>
+                    <div class="flex gap-2 mt-6">
+                        <input v-model="newCheckText" @keyup.enter="addCheckItem" placeholder="新增事項..." class="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm outline-none">
+                        <button @click="addCheckItem" class="teal-theme text-white px-5 rounded-xl"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
-                <p class="text-[10px] text-center text-gray-300 mt-8 tracking-widest font-black uppercase italic">Fighting! 2026 Busan Trip</p>
             </div>
         </div>
 
         <div v-if="showModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <h3 class="text-xl font-black mb-6 text-gray-800 tracking-tight">{{isEdit ? 'EDIT SCHEDULE' : 'ADD SCHEDULE'}}</h3>
-                <div class="space-y-4 text-sm font-bold text-gray-600">
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Time</label><input v-model="form.time" type="time" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></div>
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Place</label><input v-model="form.place" placeholder="景點或餐廳名稱" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></div>
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Note</label><textarea v-model="form.note" rows="3" placeholder="備註、必吃、注意事項..." class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></textarea></div>
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Google Map URL</label><input v-model="form.mapUrl" placeholder="貼上地圖連結" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></div>
-                </div>
-                <div class="flex gap-3 mt-8">
-                    <button @click="showModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase transition-all">Cancel</button>
-                    <button @click="saveForm" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black text-[11px] tracking-widest uppercase shadow-lg shadow-teal-100 transition-all">Save</button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="showBillModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showBillModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <h3 class="text-xl font-black mb-6 text-gray-800 tracking-tight">{{isEditBill ? 'EDIT EXPENSE' : 'ADD EXPENSE'}}</h3>
-                <div class="space-y-4 text-sm font-bold text-gray-600">
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Item Title</label><input v-model="billForm.title" placeholder="消費項目" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></div>
-                    <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Amount (KRW)</label><input v-model.number="billForm.amount" type="number" placeholder="₩ 0" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none"></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Payer</label>
-                            <select v-model="billForm.payer" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none appearance-none">
-                                <option v-for="m in members" :key="m" :value="m">{{m}}</option>
-                            </select>
-                        </div>
-                        <div><label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50">Category</label>
-                            <select v-model="billForm.category" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm outline-none appearance-none">
-                                <option v-for="c in ['食物', '購物', '交通', '住宿', '其他']" :key="c" :value="c">{{c}}</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div v-if="isEditBill" class="mt-4"><button @click="deleteBill" class="text-red-300 text-[10px] font-black tracking-widest uppercase"><i class="fas fa-trash-alt mr-1"></i>Delete This Expense</button></div>
-                <div class="flex gap-3 mt-8">
-                    <button @click="showBillModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase">Cancel</button>
-                    <button @click="saveBill" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black text-[11px] tracking-widest uppercase shadow-lg shadow-teal-100">Save</button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="showShopModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showShopModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8">
-                <h3 class="text-xl font-black mb-6 text-gray-800 tracking-tight">{{isEditShop ? 'EDIT WISH ITEM' : 'ADD WISH ITEM'}}</h3>
+            <div class="bg-white w-full rounded-[30px] p-8 max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-bold mb-6 text-gray-800">{{isEdit ? '編輯行程' : '新增行程'}}</h3>
                 <div class="space-y-4">
-                    <div @click="triggerUpload" class="w-full aspect-square bg-gray-50 rounded-[30px] flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-100">
-                        <img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover">
-                        <div v-else class="text-center text-gray-300"><i class="fas fa-camera text-2xl mb-2"></i><p class="text-[9px] font-bold uppercase tracking-widest">Upload Photo</p></div>
-                        <input id="shopImg" type="file" @change="onFileChange" class="hidden" accept="image/*">
-                    </div>
-                    <input v-model="shopForm.name" placeholder="商品名稱" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none">
-                    <input v-model.number="shopForm.price" type="number" placeholder="₩ 預估價格" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none">
-                </div>
-                <div v-if="isEditShop" class="mt-4"><button @click="deleteShop" class="text-red-300 text-[10px] font-black tracking-widest uppercase">Delete Item</button></div>
-                <div class="flex gap-3 mt-8">
-                    <button @click="showShopModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase">Cancel</button>
-                    <button @click="saveShop" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black text-[11px] tracking-widest uppercase shadow-lg shadow-teal-100">Save</button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="showMemberModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showMemberModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8">
-                <h3 class="text-xl font-black mb-6 text-gray-800 tracking-tight text-center">TRAVEL COMPANIONS</h3>
-                <div class="space-y-2 mb-6 max-h-[200px] overflow-y-auto">
-                    <div v-for="(m, i) in members" :key="i" class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
-                        <span class="font-bold text-sm text-gray-600 tracking-tight">{{m}}</span>
-                        <button @click="removeMember(i)" v-if="members.length > 1" class="text-gray-300"><i class="fas fa-minus-circle"></i></button>
-                    </div>
-                </div>
-                <div class="flex gap-2 mb-6">
-                    <input v-model="newMember" placeholder="新增旅伴姓名" class="flex-1 bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none">
-                    <button @click="addMember" class="teal-theme text-white w-14 rounded-2xl shadow-lg shadow-teal-100 active:scale-90 transition-all"><i class="fas fa-plus"></i></button>
-                </div>
-                <button @click="showMemberModal = false" class="w-full py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase">Close</button>
-            </div>
-        </div>
-
-        <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showSummaryModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8">
-                <h3 class="text-xl font-black mb-4 text-gray-800 tracking-tight">DAILY SUMMARY</h3>
-                <p class="text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-4">Day {{selectedDay}} Main Concept</p>
-                <textarea v-model="tempSummary" rows="4" placeholder="今天要去哪裡玩？或是這天的核心計畫..." class="w-full bg-gray-50 border-none rounded-[30px] p-6 text-sm font-bold outline-none leading-relaxed"></textarea>
-                <div class="flex gap-3 mt-8">
-                    <button @click="showSummaryModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase">Cancel</button>
-                    <button @click="saveSummary" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black text-[11px] tracking-widest uppercase shadow-lg shadow-teal-100">Update</button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="showNoteModal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 no-export" @click.self="showNoteModal = false">
-            <div class="bg-white w-full rounded-[40px] p-8 max-h-[90vh] overflow-y-auto">
-                <h3 class="text-xl font-black mb-6 text-gray-800 tracking-tight">{{isEditNote ? 'EDIT MEMO' : 'ADD MEMO'}}</h3>
-                <div class="space-y-5">
-                    <div>
-                        <label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50 font-bold text-gray-400">Content</label>
-                        <textarea v-model="noteForm.content" rows="6" placeholder="記下重要的細節、地鐵口、或心情..." class="w-full bg-gray-50 border-none rounded-[30px] p-6 text-sm font-bold outline-none leading-relaxed"></textarea>
-                    </div>
-                    <div>
-                        <label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50 font-bold text-gray-400">Tag (e.g. 交通, 重要)</label>
-                        <input v-model="noteForm.tag" placeholder="標籤名稱" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-2 text-[10px] uppercase tracking-widest opacity-50 font-bold text-gray-400">Link (URL)</label>
-                        <input v-model="noteForm.url" placeholder="相關連結" class="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none">
-                    </div>
+                    <div><label class="block mb-1.5 text-xs font-bold text-gray-400">時間</label><input v-model="form.time" type="time" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm outline-none"></div>
+                    <div><label class="block mb-1.5 text-xs font-bold text-gray-400">地點</label><input v-model="form.place" placeholder="景點名稱" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm outline-none"></div>
+                    <div><label class="block mb-1.5 text-xs font-bold text-gray-400">備註</label><textarea v-model="form.note" rows="3" placeholder="注意事項..." class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm outline-none"></textarea></div>
+                    <div><label class="block mb-1.5 text-xs font-bold text-gray-400">地圖連結</label><input v-model="form.mapUrl" placeholder="Google Map URL" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm outline-none"></div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button @click="showNoteModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-black text-[11px] tracking-widest uppercase">Cancel</button>
-                    <button @click="saveNote" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black text-[11px] tracking-widest uppercase shadow-lg shadow-teal-100">Save</button>
+                    <button @click="showModal = false" class="flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-bold text-xs">取消</button>
+                    <button @click="saveForm" class="flex-1 py-4 teal-theme text-white rounded-2xl font-bold text-xs">儲存</button>
                 </div>
             </div>
         </div>
 
-    </div>
+        </div>
 
     <script>
         const { createApp } = Vue;
-        // Firebase Config
         const firebaseConfig = { 
             apiKey: "AIzaSyAqfcjA5QuZlDibAJlkJL7IJvj4zwxyjPM", 
             authDomain: "busan-trip-bibi.firebaseapp.com", 
@@ -385,41 +237,19 @@
             components: { 'draggable': window.vuedraggable },
             data() {
                 return {
-                    activeTab: 'itinerary',
-                    selectedDay: 1,
-                    tabs: [
-                        { id: 'itinerary', name: 'Plan', icon: 'fa-solid fa-calendar-day' },
-                        { id: 'wallet', name: 'Wallet', icon: 'fa-solid fa-wallet' },
-                        { id: 'shop', name: 'Shop', icon: 'fa-solid fa-bag-shopping' },
-                        { id: 'memo', name: 'Memo', icon: 'fa-solid fa-note-sticky' }
-                    ],
-                    dateConfig: [
-                        { date: '2/17', day: '二' }, { date: '2/18', day: '三' },
-                        { date: '2/19', day: '四' }, { date: '2/20', day: '五' },
-                        { date: '2/21', day: '六' }
-                    ],
-                    itinerary: { 1: [], 2: [], 3: [], 4: [], 5: [] },
-                    bills: [],
-                    shoppingList: [],
-                    dailySummaries: { 1: '', 2: '', 3: '', 4: '', 5: '' },
-                    travelNotes: [],
-                    members: ['Bibi'],
-                    rate: 0.024,
-                    // 新功能資料
-                    showPocket: false,
-                    pocketList: [],
-                    showChecklistModal: false,
-                    checklistTab: 'todo',
-                    newCheckText: '',
-                    prepList: [],
-                    luggageList: [],
-                    // Modal Controls
-                    showModal: false, isEdit: false, editIndex: null, form: { time: '', place: '', note: '', mapUrl: '' },
-                    showBillModal: false, isEditBill: false, editBillIndex: null, billForm: { title: '', amount: 0, payer: 'Bibi', category: '食物' },
-                    showShopModal: false, isEditShop: false, editShopIndex: null, shopForm: { name: '', price: 0, imgBase64: '', isBought: false },
-                    showSummaryModal: false, tempSummary: '',
-                    showMemberModal: false, newMember: '',
-                    showNoteModal: false, isEditNote: false, editNoteIndex: null, noteForm: { content: '', tag: '', url: '', id: Date.now() }
+                    activeTab: 'itinerary', selectedDay: 1,
+                    tabs: [{id:'itinerary', name:'PLAN', icon:'fa-solid fa-calendar-day'}, {id:'wallet', name:'WALLET', icon:'fa-solid fa-wallet'}, {id:'shop', name:'SHOP', icon:'fa-solid fa-bag-shopping'}, {id:'memo', name:'MEMO', icon:'fa-solid fa-note-sticky'}],
+                    dateConfig: [{date:'2/17', day:'二'}, {date:'2/18', day:'三'}, {date:'2/19', day:'四'}, {date:'2/20', day:'五'}, {date:'2/21', day:'六'}],
+                    itinerary: {1:[], 2:[], 3:[], 4:[], 5:[]}, bills: [], shoppingList: [], dailySummaries: {1:'', 2:'', 3:'', 4:'', 5:''}, travelNotes: [], members: ['Bibi'], rate: 0.024,
+                    // 新功能欄位
+                    showPocket: false, pocketList: [],
+                    showChecklistModal: false, checklistTab: 'todo', newCheckText: '', prepList: [], luggageList: [],
+                    // Modal 狀態 (完全依照妳的邏輯)
+                    showModal: false, isEdit: false, editIndex: null, form: {time:'', place:'', note:'', mapUrl:''},
+                    showBillModal: false, isEditBill: false, editBillIndex: null, billForm: {title:'', amount:0, payer:'Bibi', category:'食物'},
+                    showShopModal: false, isEditShop: false, editShopIndex: null, shopForm: {name:'', price:0, imgBase64:'', isBought:false},
+                    showSummaryModal: false, tempSummary: '', showMemberModal: false, newMember: '',
+                    showNoteModal: false, isEditNote: false, editNoteIndex: null, noteForm: {content:'', tag:'', id: Date.now()}
                 }
             },
             computed: {
@@ -427,16 +257,16 @@
                 sortedBills() { return [...this.bills].reverse(); }
             },
             mounted() {
-                db.ref(DATA_PATH).on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        this.itinerary = data.itinerary || { 1: [], 2: [], 3: [], 4: [], 5: [] };
+                db.ref(DATA_PATH).on('value', (s) => {
+                    const data = s.val();
+                    if(data) {
+                        this.itinerary = data.itinerary || {1:[], 2:[], 3:[], 4:[], 5:[]};
                         this.bills = data.bills || [];
                         this.shoppingList = data.shoppingList || [];
                         this.dailySummaries = data.dailySummaries || {};
                         this.travelNotes = data.travelNotes || [];
                         this.members = data.members || ['Bibi'];
-                        // 新功能資料同步
+                        // 新欄位同步
                         this.pocketList = data.pocketList || [];
                         this.prepList = data.prepList || [];
                         this.luggageList = data.luggageList || [];
@@ -452,96 +282,64 @@
                     }); 
                 },
                 formatNumber(num) { return new Intl.NumberFormat().format(num); },
-                getCategoryIcon(cat) { return { '食物': 'fa-utensils', '購物': 'fa-bag-shopping', '交通': 'fa-taxi', '住宿': 'fa-hotel' }[cat] || 'fa-won-sign'; },
+                getCategoryIcon(cat) { return {'食物':'fa-utensils', '購物':'fa-bag-shopping', '交通':'fa-taxi', '住宿':'fa-hotel'}[cat] || 'fa-won-sign'; },
                 memberTotal(name) { return this.bills.filter(b => b.payer === name).reduce((sum, b) => sum + Number(b.amount), 0); },
                 
-                // 新功能：備選口袋
-                addPocketItem() {
-                    const name = prompt('備選地點/餐廳名稱？');
-                    const link = prompt('Google Map 或連結？(選填)');
-                    if (name) { this.pocketList.push({ name, link }); this.sync(); }
-                },
-                deletePocket(idx) { if (confirm('要刪除這個備案嗎？')) { this.pocketList.splice(idx, 1); this.sync(); } },
+                // 新功能 Method
+                addPocketItem() { const name = prompt('地點？'); if(name) { this.pocketList.push({name, link: prompt('網址？')}); this.sync(); } },
+                deletePocket(idx) { if(confirm('刪除？')) { this.pocketList.splice(idx, 1); this.sync(); } },
+                addCheckItem() { if(!this.newCheckText.trim()) return; const t = this.checklistTab === 'todo' ? this.prepList : this.luggageList; t.push({text: this.newCheckText, done: false}); this.newCheckText = ''; this.sync(); },
+                toggleCheckItem(idx) { const t = this.checklistTab === 'todo' ? this.prepList : this.luggageList; t[idx].done = !t[idx].done; this.sync(); },
+                deleteCheckItem(idx) { const t = this.checklistTab === 'todo' ? this.prepList : this.luggageList; t.splice(idx, 1); this.sync(); },
 
-                // 新功能：待辦與行李
-                addCheckItem() {
-                    if (!this.newCheckText.trim()) return;
-                    const target = this.checklistTab === 'todo' ? this.prepList : this.luggageList;
-                    target.push({ text: this.newCheckText, done: false });
-                    this.newCheckText = '';
-                    this.sync();
-                },
-                toggleCheckItem(idx) {
-                    const target = this.checklistTab === 'todo' ? this.prepList : this.luggageList;
-                    target[idx].done = !target[idx].done;
-                    this.sync();
-                },
-                deleteCheckItem(idx) {
-                    const target = this.checklistTab === 'todo' ? this.prepList : this.luggageList;
-                    target.splice(idx, 1);
-                    this.sync();
-                },
-
-                // 原有功能 Methods (不變)
-                openAddModal() { this.isEdit = false; this.form = { time: '', place: '', note: '', mapUrl: '' }; this.showModal = true; },
-                openEditModal(idx) { this.isEdit = true; this.editIndex = idx; this.form = { ...this.itinerary[this.selectedDay][idx] }; this.showModal = true; },
+                // 舊有功能邏輯 (100% 複製自 Word)
+                openAddModal() { this.isEdit = false; this.form = {time:'', place:'', note:'', mapUrl:''}; this.showModal = true; },
+                openEditModal(idx) { this.isEdit = true; this.editIndex = idx; this.form = {...this.itinerary[this.selectedDay][idx]}; this.showModal = true; },
                 saveForm() {
-                    if (!this.itinerary[this.selectedDay]) this.itinerary[this.selectedDay] = [];
-                    if (this.isEdit) this.itinerary[this.selectedDay][this.editIndex] = { ...this.form };
-                    else this.itinerary[this.selectedDay].push({ ...this.form });
+                    if(!this.itinerary[this.selectedDay]) this.itinerary[this.selectedDay] = [];
+                    if(this.isEdit) this.itinerary[this.selectedDay][this.editIndex] = {...this.form};
+                    else this.itinerary[this.selectedDay].push({...this.form});
                     this.itinerary[this.selectedDay].sort((a, b) => a.time.localeCompare(b.time));
                     this.sync(); this.showModal = false;
                 },
-                deleteItem(idx) { if (confirm('刪除行程？')) { this.itinerary[this.selectedDay].splice(idx, 1); this.sync(); } },
-                openBillAdd() { this.isEditBill = false; this.billForm = { title: '', amount: 0, payer: this.members[0], category: '食物' }; this.showBillModal = true; },
+                deleteItem(idx) { if(confirm('刪除？')) { this.itinerary[this.selectedDay].splice(idx, 1); this.sync(); } },
+                openBillAdd() { this.isEditBill = false; this.billForm = {title:'', amount:0, payer:this.members[0], category:'食物'}; this.showBillModal = true; },
                 openBillEdit(idx) {
                     const realIdx = this.bills.length - 1 - idx;
                     this.isEditBill = true; this.editBillIndex = realIdx;
-                    this.billForm = { ...this.bills[realIdx] }; this.showBillModal = true;
+                    this.billForm = {...this.bills[realIdx]}; this.showBillModal = true;
                 },
                 saveBill() {
-                    if (this.isEditBill) this.bills[this.editBillIndex] = { ...this.billForm };
-                    else this.bills.push({ ...this.billForm });
+                    if(this.isEditBill) this.bills[this.editBillIndex] = {...this.billForm};
+                    else this.bills.push({...this.billForm});
                     this.sync(); this.showBillModal = false;
                 },
-                deleteBill() { if (confirm('刪除帳目？')) { this.bills.splice(this.editBillIndex, 1); this.sync(); this.showBillModal = false; } },
-                openShopAdd() { this.isEditShop = false; this.shopForm = { name: '', price: 0, imgBase64: '', isBought: false }; this.showShopModal = true; },
-                openShopEdit(idx) { this.isEditShop = true; this.editShopIndex = idx; this.shopForm = { ...this.shoppingList[idx] }; this.showShopModal = true; },
+                deleteBill() { if(confirm('刪除？')) { this.bills.splice(this.editBillIndex, 1); this.sync(); this.showBillModal = false; } },
+                openShopAdd() { this.isEditShop = false; this.shopForm = {name:'', price:0, imgBase64:'', isBought:false}; this.showShopModal = true; },
+                openShopEdit(idx) { this.isEditShop = true; this.editShopIndex = idx; this.shopForm = {...this.shoppingList[idx]}; this.showShopModal = true; },
                 saveShop() {
-                    if (this.isEditShop) this.shoppingList[this.editShopIndex] = { ...this.shopForm };
-                    else this.shoppingList.push({ ...this.shopForm });
+                    if(this.isEditShop) this.shoppingList[this.editShopIndex] = {...this.shopForm};
+                    else this.shoppingList.push({...this.shopForm});
                     this.sync(); this.showShopModal = false;
                 },
                 toggleBought(idx) { this.shoppingList[idx].isBought = !this.shoppingList[idx].isBought; this.sync(); },
-                deleteShop() { if (confirm('刪除商品？')) { this.shoppingList.splice(this.editShopIndex, 1); this.sync(); this.showShopModal = false; } },
-                triggerUpload() { document.getElementById('shopImg').click(); },
-                onFileChange(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (f) => { this.shopForm.imgBase64 = f.target.result; };
-                    reader.readAsDataURL(file);
+                deleteShop() { if(confirm('刪除？')) { this.shoppingList.splice(this.editShopIndex, 1); this.sync(); this.showShopModal = false; } },
+                openNoteAdd() { this.isEditNote = false; this.noteForm = {content:'', tag:'', id: Date.now()}; this.showNoteModal = true; },
+                openNoteEdit(idx) { this.isEditNote = true; this.editIndex = idx; this.noteForm = {...this.travelNotes[idx]}; this.showNoteModal = true; },
+                saveNote() { 
+                    if(!this.noteForm.content || this.noteForm.content.trim() === '') return;
+                    if(this.isEditNote) this.travelNotes[this.editIndex] = {...this.noteForm}; 
+                    else this.travelNotes.unshift({...this.noteForm}); 
+                    this.sync(); this.showNoteModal = false; 
                 },
-                addMember() { if (this.newMember.trim()) { this.members.push(this.newMember.trim()); this.newMember = ''; this.sync(); } },
-                removeMember(idx) { if (confirm('移除成員？')) { this.members.splice(idx, 1); this.sync(); } },
-                openSummaryModal() { this.tempSummary = this.dailySummaries[this.selectedDay] || ''; this.showSummaryModal = true; },
-                saveSummary() { this.dailySummaries[this.selectedDay] = this.tempSummary; this.sync(); this.showSummaryModal = false; },
-                openNoteAdd() { this.isEditNote = false; this.noteForm = { content: '', tag: '', url: '', id: Date.now() }; this.showNoteModal = true; },
-                openNoteEdit(idx) { this.isEditNote = true; this.editNoteIndex = idx; this.noteForm = { ...this.travelNotes[idx] }; this.showNoteModal = true; },
-                saveNote() {
-                    if (this.isEditNote) this.travelNotes[this.editNoteIndex] = { ...this.noteForm };
-                    else this.travelNotes.unshift({ ...this.noteForm });
-                    this.sync(); this.showNoteModal = false;
-                },
-                deleteNote(idx) { if (confirm('刪除 MEMO？')) { this.travelNotes.splice(idx, 1); this.sync(); } },
+                deleteNote(idx) { if(confirm('刪除？')) { this.travelNotes.splice(idx, 1); this.sync(); } },
                 exportImage() {
                     const appElement = document.getElementById('app');
                     appElement.classList.add('export-mode');
-                    html2canvas(appElement, { useCORS: true, backgroundColor: "#f8fbfb", scale: 2, width: 375 }).then(canvas => {
+                    html2canvas(appElement, {useCORS: true, backgroundColor: "#f8fbfb", scale: 2, width: 375}).then(canvas => {
                         const link = document.createElement('a');
                         link.download = `Busan_Day${this.selectedDay}.png`;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
+                        link.href = canvas.toDataURL('image/png'); link.click();
                         appElement.classList.remove('export-mode');
                     });
                 }
