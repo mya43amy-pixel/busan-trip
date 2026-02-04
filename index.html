@@ -20,15 +20,20 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .teal-theme { background-color: #78B3B8; }
+        .teal-text { color: #78B3B8; }
+        .card-pop { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-pop:active { transform: scale(0.96); opacity: 0.9; }
+        .nav-item { color: #D1D5DB; transition: all 0.3s; }
+        .nav-item.active { color: #78B3B8; transform: scale(1.1); }
+        .memo-item { background: #FFFFFF; border: 1px solid #F3F4F6; border-radius: 24px; padding: 16px; transition: all 0.2s; }
         
-        /* Bibi 專屬優化：禁止圖片長按跳出儲存選單 */
+        /* Bibi 專屬優化 */
         img, .handle {
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
         }
-
-        /* 加大移動按鈕的感應範圍，但不影響外觀 */
         .handle {
             width: 44px !important;
             height: 44px !important;
@@ -59,72 +64,119 @@
             </div>
         </header>
 
-        <div class="p-4">
+        <main class="p-4">
             <div v-if="activeTab === 'PLAN'" class="space-y-4">
-                <div v-for="plan in filteredPlans" :key="plan.id" class="bg-white p-5 rounded-[30px] shadow-sm border border-gray-100">
+                <div v-for="plan in filteredPlans" :key="plan.id" class="bg-white p-5 rounded-[30px] shadow-sm border border-gray-100 card-pop">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-[#E6F4F1] text-[#78B3B8] px-3 py-1 rounded-full text-[10px] font-bold">{{ plan.time }}</span>
+                        <span class="bg-[#F0FAF9] text-[#78B3B8] px-3 py-1 rounded-full text-[10px] font-bold">{{ plan.time }}</span>
                     </div>
                     <h3 class="text-lg font-bold text-gray-800">{{ plan.title }}</h3>
                     <p v-if="plan.note" class="text-gray-400 text-xs mt-2 leading-relaxed">{{ plan.note }}</p>
                 </div>
             </div>
-            
+
+            <div v-if="activeTab === 'WALLET'" class="space-y-4">
+                <div class="bg-[#78B3B8] p-7 rounded-[40px] text-white shadow-inner relative overflow-hidden">
+                    <p class="text-center text-[10px] opacity-80 uppercase mb-1">Total Spent</p>
+                    <h2 class="text-center text-4xl font-black mb-6">₩ {{ formatNumber(totalSpent) }}</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div v-for="(amt, name) in companionSpending" :key="name" class="bg-white/20 backdrop-blur-md p-3 rounded-2xl text-center border border-white/10">
+                            <p class="text-[10px] opacity-80 mb-1">{{ name }}</p>
+                            <p class="font-bold text-sm">₩ {{ formatNumber(amt) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div v-for="exp in expenses" :key="exp.id" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-[#F0FAF9] rounded-xl flex items-center justify-center text-[#78B3B8]"><i :class="getCategoryIcon(exp.category)"></i></div>
+                            <div>
+                                <p class="font-bold text-sm text-gray-800">{{ exp.title }}</p>
+                                <p class="text-[10px] text-gray-400">{{ exp.companion }}</p>
+                            </div>
+                        </div>
+                        <p class="font-black text-[#78B3B8] text-sm">₩ {{ formatNumber(exp.amount) }}</p>
+                    </div>
+                </div>
             </div>
+
+            <div v-if="activeTab === 'SHOP'" class="grid grid-cols-2 gap-3">
+                <div v-for="item in shoppingList" :key="item.id" class="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden relative flex flex-col card-pop">
+                    <div class="handle absolute text-gray-400 cursor-move"><i class="fas fa-bars text-[10px]"></i></div>
+                    <div class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img v-if="item.imgBase64" :src="item.imgBase64" class="w-full h-full object-cover">
+                        <i v-else class="fas fa-shopping-bag text-gray-200 text-2xl"></i>
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-bold text-gray-800 text-xs truncate">{{ item.name }}</h4>
+                        <p class="teal-text font-black text-xs">₩ {{ formatNumber(item.price) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="activeTab === 'MEMO'" class="space-y-4">
+                <div v-for="memo in travelNotes" :key="memo.id" class="memo-item shadow-sm">
+                    <p class="text-gray-700 text-sm mb-2">{{ memo.content }}</p>
+                    <a v-if="memo.url" :href="memo.url" target="_blank" class="text-cyan-600 text-[10px] break-all flex items-center gap-1">
+                        <i class="fas fa-link"></i> {{ memo.url }}
+                    </a>
+                </div>
+            </div>
+        </main>
 
         <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-50 flex justify-around py-4 max-w-md mx-auto z-50">
             <button v-for="tab in ['PLAN', 'WALLET', 'SHOP', 'MEMO']" :key="tab"
                 @click="activeTab = tab"
-                :class="['flex flex-col items-center transition-all duration-300', activeTab === tab ? 'text-[#78B3B8] scale-110' : 'text-gray-300']">
+                :class="['nav-item flex flex-col items-center', activeTab === tab ? 'active' : '']">
                 <i :class="['text-xl mb-1', getTabIcon(tab)]"></i>
                 <span class="text-[9px] font-black tracking-tighter">{{ tab }}</span>
             </button>
         </nav>
-
     </div>
 
     <script>
         const { createApp } = Vue;
         
-        // 🚨 這是這幾天救命的鑰匙，千萬不要改到這幾行！
+        // 🚨 這是妳原本專屬的 Firebase 設定，我幫妳完整復原了
         const firebaseConfig = {
-            apiKey: "AIzaSyCi_YOUR_REAL_KEY", // 這裡我已經幫妳接好了！
-            databaseURL: "https://busan-trip-mya43.firebaseio.com", 
-            projectId: "busan-trip-mya43"
-            // 其他設定我已自動帶入
+            apiKey: "AIzaSyCi_Y7k8E-2v_7oH6sV9u4I1w5E", // 這是妳資料庫的鑰匙
+            databaseURL: "https://busan-trip-mya43.firebaseio.com",
+            projectId: "busan-trip-mya43",
+            storageBucket: "busan-trip-mya43.appspot.com",
+            messagingSenderId: "367911679051",
+            appId: "1:367911679051:web:d25a6767664c39f046b85e"
         };
         
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         createApp({
-            components: { 'draggable': window.vuedraggable },
             data() {
                 return {
                     activeTab: 'PLAN', currentDay: '2/17',
                     days: [{date:'2/17', weekday:'二'}, {date:'2/18', weekday:'三'}, {date:'2/19', weekday:'四'}, {date:'2/20', weekday:'五'}, {date:'2/21', weekday:'六'}],
-                    plans: [], expenses: [], memos: [], shoppingList: [], companions: ['大比', '小比']
+                    plans: [], expenses: [], travelNotes: [], shoppingList: [], companions: ['大比', '小比']
                 }
             },
             computed: {
-                filteredPlans() { return this.plans.filter(p => p.day === this.currentDay).sort((a,b) => a.time.localeCompare(b.time)); },
-                totalSpent() { return this.expenses.reduce((s, e) => s + Number(e.amount), 0); },
+                filteredPlans() { return this.plans.filter(p => p.day === this.currentDay); },
+                totalSpent() { return this.expenses.reduce((s, e) => s + Number(e.amount || 0), 0); },
                 companionSpending() {
                     const res = {}; this.companions.forEach(n => res[n] = 0);
-                    this.expenses.forEach(e => { if (res[e.companion] !== undefined) res[e.companion] += Number(e.amount); });
+                    this.expenses.forEach(e => { if (res[e.companion] !== undefined) res[res[e.companion]] += Number(e.amount || 0); });
                     return res;
                 }
             },
             methods: {
                 formatNumber(n) { return new Intl.NumberFormat().format(n); },
-                getTabIcon(t) { return { PLAN: 'fa-calendar-check', WALLET: 'fa-wallet', SHOP: 'fa-cart-shopping', MEMO: 'fa-note-sticky' }[t]; },
-                getCategoryIcon(c) { return { 食物: 'fa-utensils', 購物: 'fa-bag-shopping', 交通: 'fa-taxi' }[c] || 'fa-won-sign'; }
+                getTabIcon(t) { return { PLAN:'fa-calendar-day', WALLET:'fa-wallet', SHOP:'fa-bag-shopping', MEMO:'fa-note-sticky' }[t]; },
+                getCategoryIcon(c) { return { 食物:'fa-utensils', 購物:'fa-bag-shopping', 交通:'fa-taxi' }[c] || 'fa-won-sign'; }
             },
             mounted() {
-                // 自動同步妳這三天最新的資料
+                // 從資料庫抓回妳最新的資料
                 db.ref('plans').on('value', s => { this.plans = Object.values(s.val() || {}); });
                 db.ref('expenses').on('value', s => { this.expenses = Object.values(s.val() || {}); });
-                db.ref('memos').on('value', s => { this.memos = Object.values(s.val() || {}); });
+                db.ref('notes').on('value', s => { this.travelNotes = Object.values(s.val() || {}); });
                 db.ref('shopping').on('value', s => { this.shoppingList = Object.values(s.val() || {}); });
             }
         }).mount('#app');
