@@ -60,7 +60,6 @@
             z-index: 10;
         }
 
-        /* 記帳明細優化 */
         .bill-card { transition: all 0.2s; border-left: 4px solid transparent; }
         .bill-card:active { transform: scale(0.98); background: #f0f7f7; }
         .bill-drag-handle { cursor: grab; }
@@ -120,7 +119,7 @@
                         <p class="text-sm font-bold mt-1 bg-white/20 inline-block px-3 py-1 rounded-full">≈ NT$ {{Math.round(totalSpent * rate).toLocaleString()}}</p>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3 mb-5">
                         <div class="bg-white/10 rounded-2xl p-3 border border-white/10">
                             <p class="text-[9px] opacity-70 font-bold uppercase"><i class="fas fa-wallet mr-1"></i>Cash</p>
                             <p class="text-sm font-black">₩ {{balance.toLocaleString()}}</p>
@@ -133,10 +132,13 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-center gap-4 border-t border-white/20 mt-4 pt-4 overflow-x-auto no-scrollbar">
-                        <div v-for="member in members" :key="member" class="text-center min-w-[60px]">
-                            <p class="text-[9px] opacity-70 truncate">{{member}}</p>
-                            <p class="text-[11px] font-bold">₩{{Math.round(getMemberTotal(member)/1000)}}k</p>
+                    <div class="border-t border-white/20 pt-4 overflow-x-auto no-scrollbar">
+                        <div class="flex gap-4">
+                            <div v-for="member in members" :key="member" class="bg-white/5 p-2 rounded-xl border border-white/10 min-w-[85px] text-center">
+                                <p class="text-[9px] opacity-70 truncate font-bold mb-1">{{member}}</p>
+                                <p class="text-[11px] font-black leading-tight">₩ {{getMemberTotal(member).toLocaleString()}}</p>
+                                <p class="text-[9px] opacity-60 font-medium">NT$ {{Math.round(getMemberTotal(member) * rate).toLocaleString()}}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -164,7 +166,7 @@
                                 </div>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-bold">{{element.payer}}</span>
-                                    <p v-if="element.note" class="text-[10px] text-gray-400 truncate flex-1">{{element.note}}</p>
+                                    <p v-if="element.note" class="text-[10px] text-gray-400 truncate flex-1 font-medium">{{element.note}}</p>
                                 </div>
                             </div>
                         </div>
@@ -204,7 +206,7 @@
                                     <div class="p-3">
                                         <h4 class="font-bold text-gray-800 text-xs truncate">{{element.name}}</h4>
                                         <p v-if="element.price > 0" class="teal-text font-black text-xs">₩ {{element.price.toLocaleString()}}</p>
-                                        <p v-if="element.note" class="text-[9px] text-gray-400 mt-1 truncate">{{element.note}}</p>
+                                        <p v-if="element.note" class="text-[9px] text-gray-400 mt-1 truncate font-medium">{{element.note}}</p>
                                     </div>
                                     <div class="handle absolute text-gray-400 cursor-move"><i class="fas fa-bars text-[10px]"></i></div>
                                     <button @click.stop="toggleBought(element.id)" class="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-md bg-white/90" :class="element.isBought ? 'teal-theme text-white' : 'text-gray-300'"><i class="fas fa-check text-[10px]"></i></button>
@@ -270,8 +272,8 @@
             </div>
             <div class="bg-gray-50 p-5 rounded-[24px]"><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-black text-gray-400 mb-2">交通</label><div class="flex gap-1 mb-3"><button v-for="t in ['walk','car','bus','subway','plane']" :key="t" @click="toggleTransit(t)" :class="form.transitType.includes(t) ? 'teal-theme text-white' : 'bg-white text-gray-300'" class="w-8 h-8 rounded-full flex items-center justify-center text-xs shadow-sm"><i :class="getTransitIcon(t)"></i></button></div><div class="flex gap-1"><input type="number" v-model="form.transitTime" class="input-round p-2 text-xs w-16 text-center"><select v-model="form.transitUnit" class="input-round p-2 text-xs"><option value="m">m</option><option value="h">h</option></select></div></div><div><label class="block text-xs font-black text-gray-400 mb-2">停留</label><div class="flex gap-1 mt-11"><input type="number" v-model="form.stayTime" class="input-round p-2 text-xs w-16 text-center"><select v-model="form.stayUnit" class="input-round p-2 text-xs"><option value="m">m</option><option value="h">h</option></select></div></div></div></div><div><label class="block text-xs font-black text-gray-400 mb-2">連結</label><input v-model="form.mapUrl" class="input-round"></div><div><label class="block text-xs font-black text-gray-400 mb-2">備註</label><textarea v-model="form.note" class="input-round h-24"></textarea></div><div class="flex gap-3 pt-4"><button v-if="isEditing" @click="deleteItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveForm" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div></div>
         <div v-if="showMemberModal" class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-6"><div class="bg-white w-full rounded-[35px] p-8 shadow-2xl"><h3 class="font-black mb-6 text-center text-gray-800">編輯旅伴 👥</h3><input v-model="memberInput" class="input-round text-center mb-4"><div class="flex gap-3"><button @click="showMemberModal = false" class="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold">取消</button><button @click="updateMembers" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black">更新</button></div></div></div>
-        <div v-if="showShopModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end"><div class="bg-white w-full rounded-t-[40px] p-8 pb-12 overflow-y-auto max-h-[90vh]"><div class="flex justify-between mb-8"><h3 class="text-xl font-black">待買 🛍️</h3><button @click="showShopModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div><div class="space-y-4"><div class="flex justify-center"><label class="w-24 h-24 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center cursor-pointer overflow-hidden"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><i v-else class="fas fa-camera text-gray-200"></i><input type="file" @change="handleFileUpload" class="hidden" accept="image/*"></label></div><input v-model="shopForm.name" placeholder="想買什麼？" class="input-round font-bold"><input v-model="shopForm.price" type="number" class="input-round teal-text font-black"><select v-model="shopForm.category" class="input-round text-xs font-bold"><option v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" :value="c">{{c}}</option></select><textarea v-model="shopForm.note" class="input-round h-20 text-xs"></textarea><div class="flex gap-4 mt-8"><button v-if="isEditShop" @click="deleteShopItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div></div>
-        <div v-if="showNoteModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end"><div class="bg-white w-full rounded-t-[40px] p-8 pb-12 overflow-y-auto max-h-[80vh]"><h3 class="font-black mb-6 text-lg">MEMO</h3><textarea v-model="noteForm.content" class="input-round text-sm mb-4" rows="6"></textarea><input v-model="noteForm.tag" class="input-round text-xs mb-4" placeholder="連結"><div class="flex gap-4"><button @click="showNoteModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveNote" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div>
+        <div v-if="showShopModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end"><div class="bg-white w-full rounded-t-[40px] p-8 pb-12 overflow-y-auto max-h-[90vh]"><div class="flex justify-between mb-8"><h3 class="text-xl font-black">待買 🛍️</h3><button @click="showShopModal = false" class="text-gray-400"><i class="fas fa-times"></i></button></div><div class="space-y-4"><div class="flex justify-center"><label class="w-24 h-24 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center cursor-pointer overflow-hidden"><img v-if="shopForm.imgBase64" :src="shopForm.imgBase64" class="w-full h-full object-cover"><i v-else class="fas fa-camera text-gray-200"></i><input type="file" @change="handleFileUpload" class="hidden" accept="image/*"></label></div><input v-model="shopForm.name" placeholder="想買什麼？" class="input-round font-bold"><input v-model="shopForm.price" type="number" class="input-round teal-text font-black"><select v-model="shopForm.category" class="input-round text-xs font-bold"><option v-for="c in ['食物', '購物', '美妝', '其他']" :key="c" :value="c">{{c}}</option></select><textarea v-model="shopForm.note" class="input-round h-20 text-xs font-medium"></textarea><div class="flex gap-4 mt-8"><button v-if="isEditShop" @click="deleteShopItem" class="flex-1 py-4 bg-red-50 text-red-400 rounded-2xl font-bold">刪除</button><button @click="saveShopItem" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div></div>
+        <div v-if="showNoteModal" class="fixed inset-0 bg-black/60 z-[60] flex items-end"><div class="bg-white w-full rounded-t-[40px] p-8 pb-12 overflow-y-auto max-h-[80vh]"><h3 class="font-black mb-6 text-lg">MEMO</h3><textarea v-model="noteForm.content" class="input-round text-sm mb-4 font-medium" rows="6"></textarea><input v-model="noteForm.tag" class="input-round text-xs mb-4 font-medium" placeholder="連結"><div class="flex gap-4"><button @click="showNoteModal = false" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold">取消</button><button @click="saveNote" class="flex-[2] py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div>
         <div v-if="showSummaryModal" class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-6"><div class="bg-white w-full rounded-[35px] p-8 shadow-2xl"><h3 class="text-lg font-black text-center mb-6">今日主題</h3><input v-model="tempSummary" class="input-round text-center font-bold"><div class="flex gap-3 mt-8"><button @click="showSummaryModal = false" class="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold">取消</button><button @click="saveSummary" class="flex-1 py-4 teal-theme text-white rounded-2xl font-black">儲存</button></div></div></div>
 
     </div>
@@ -369,13 +371,11 @@
                         this.shoppingList[idx].isBought = !this.shoppingList[idx].isBought;
                         const item = this.shoppingList.splice(idx, 1)[0];
                         if(item.isBought) {
-                            // 移到該類別的最下方
                             let lastIdx = -1;
                             for(let i=0; i<this.shoppingList.length; i++){ if(this.shoppingList[i].category === item.category) lastIdx = i; }
                             if(lastIdx === -1) this.shoppingList.push(item);
                             else this.shoppingList.splice(lastIdx + 1, 0, item);
                         } else {
-                            // 移到該類別的最上方 (恢復原本位置)
                             let firstIdx = this.shoppingList.findIndex(i => i.category === item.category);
                             if(firstIdx === -1) this.shoppingList.push(item);
                             else this.shoppingList.splice(firstIdx, 0, item);
