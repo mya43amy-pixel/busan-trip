@@ -41,7 +41,7 @@
         .type-toggle .active-income { background: #78B7BB; color: white; }
         .type-toggle .active-expense { background: #F87171; color: white; }
 
-        img, .handle { 
+        img, .handle, .bill-drag-handle { 
             -webkit-touch-callout: none !important; 
             -webkit-user-select: none !important;
             user-select: none !important;
@@ -60,12 +60,11 @@
             z-index: 10;
         }
 
-        /* 記帳拖拽手柄樣式 */
-        .bill-handle {
-            cursor: move;
-            color: #d1dada;
-            padding: 0 10px;
-        }
+        /* 記帳明細優化 */
+        .bill-card { transition: all 0.2s; border-left: 4px solid transparent; }
+        .bill-card:active { transform: scale(0.98); background: #f0f7f7; }
+        .bill-drag-handle { cursor: grab; }
+        .bill-drag-handle:active { cursor: grabbing; }
     </style>
 </head>
 <body>
@@ -114,52 +113,58 @@
             </div>
 
             <div v-if="activeTab === 'wallet'" class="space-y-6">
-                <div class="bg-gradient-to-br from-[#78B7BB] to-[#95d1d5] p-6 rounded-[30px] text-white shadow-xl text-center">
-                    <p class="text-[10px] opacity-80 font-bold uppercase tracking-widest">Total Spent</p>
-                    <h2 class="text-4xl font-black">₩ {{totalSpent.toLocaleString()}}</h2>
-                    <p class="text-sm opacity-70 font-bold mb-4">≈ NT$ {{Math.round(totalSpent * rate).toLocaleString()}}</p>
+                <div class="bg-gradient-to-br from-[#78B7BB] to-[#95d1d5] p-6 rounded-[30px] text-white shadow-xl">
+                    <div class="text-center mb-6">
+                        <p class="text-[10px] opacity-80 font-bold uppercase tracking-widest">Total Spent</p>
+                        <h2 class="text-4xl font-black">₩ {{totalSpent.toLocaleString()}}</h2>
+                        <p class="text-sm font-bold mt-1 bg-white/20 inline-block px-3 py-1 rounded-full">≈ NT$ {{Math.round(totalSpent * rate).toLocaleString()}}</p>
+                    </div>
                     
-                    <div class="bg-white/10 rounded-2xl p-3 mb-4">
-                        <p class="text-[10px] opacity-80 font-bold uppercase tracking-widest">Cash Balance (剩餘現金)</p>
-                        <p class="text-xl font-black">₩ {{balance.toLocaleString()}}</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/10 rounded-2xl p-3 border border-white/10">
+                            <p class="text-[9px] opacity-70 font-bold uppercase"><i class="fas fa-wallet mr-1"></i>Cash</p>
+                            <p class="text-sm font-black">₩ {{balance.toLocaleString()}}</p>
+                            <p class="text-[10px] opacity-60">≈ NT$ {{Math.round(balance * rate).toLocaleString()}}</p>
+                        </div>
+                        <div class="bg-white/10 rounded-2xl p-3 border border-white/10">
+                            <p class="text-[9px] opacity-70 font-bold uppercase"><i class="fas fa-credit-card mr-1"></i>Card</p>
+                            <p class="text-sm font-black">₩ {{totalCard.toLocaleString()}}</p>
+                            <p class="text-[10px] opacity-60">≈ NT$ {{Math.round(totalCard * rate).toLocaleString()}}</p>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4 mb-4 text-xs font-bold">
-                        <div>現金支出: ₩ {{totalCash.toLocaleString()}}</div>
-                        <div>刷卡支出: ₩ {{totalCard.toLocaleString()}}</div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 border-t border-white/20 pt-4">
-                        <div v-for="member in members" :key="member" class="bg-white/5 p-2 rounded-xl border border-white/10">
-                            <p class="text-[10px] opacity-70 truncate">{{member}}</p>
-                            <p class="text-xs font-bold">₩ {{getMemberTotal(member).toLocaleString()}}</p>
+                    <div class="flex justify-center gap-4 border-t border-white/20 mt-4 pt-4 overflow-x-auto no-scrollbar">
+                        <div v-for="member in members" :key="member" class="text-center min-w-[60px]">
+                            <p class="text-[9px] opacity-70 truncate">{{member}}</p>
+                            <p class="text-[11px] font-bold">₩{{Math.round(getMemberTotal(member)/1000)}}k</p>
                         </div>
                     </div>
                 </div>
+
                 <div class="flex justify-end px-2"><button @click="manageMembers" class="text-[10px] teal-text font-bold"><i class="fas fa-users-cog mr-1"></i>旅伴成員</button></div>
                 
-                <draggable v-model="bills" item-key="index" handle=".bill-handle" @end="sync" class="space-y-3">
+                <draggable v-model="bills" item-key="index" handle=".bill-drag-handle" @end="sync" class="space-y-3">
                     <template #item="{element, index}">
-                        <div @click="editBill(index)" class="bg-white p-4 rounded-2xl border border-gray-50 shadow-sm flex items-center">
-                            <div class="bill-handle mr-1"><i class="fas fa-grip-vertical text-xs"></i></div>
-                            <div class="flex-1 flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" :class="element.type === 'income' ? 'bg-orange-50 text-orange-400' : 'bg-teal-50 teal-text'">
-                                        <i :class="element.type === 'income' ? 'fas fa-hand-holding-usd' : getCategoryIcon(element.category)"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-gray-800 text-sm">{{element.itemName}}</p>
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase">
-                                            {{element.payer}} · {{element.type === 'income' ? '收入/換匯' : element.category}}
+                        <div @click="editBill(index)" class="bill-card bg-white p-4 rounded-2xl border border-gray-50 shadow-sm flex items-center gap-4">
+                            <div class="bill-drag-handle w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" 
+                                 :class="element.type === 'income' ? 'bg-orange-50 text-orange-400' : 'bg-teal-50 teal-text'">
+                                <i :class="element.type === 'income' ? 'fas fa-hand-holding-usd' : getCategoryIcon(element.category)"></i>
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-gray-800 text-sm truncate">{{element.itemName}}</h4>
+                                    <div class="text-right">
+                                        <p class="font-black text-sm leading-none" :class="element.type === 'income' ? 'text-orange-500' : 'text-gray-700'">
+                                            <span class="text-[10px] mr-0.5 opacity-50">{{element.method === '刷卡' ? '💳' : '💰'}}</span>
+                                            {{element.type === 'income' ? '+' : '-'}} ₩{{Number(element.amount).toLocaleString()}}
                                         </p>
-                                        <p v-if="element.note" class="text-[10px] teal-text mt-0.5 opacity-70 italic">{{element.note}}</p>
+                                        <p class="text-[10px] text-gray-300 font-bold mt-1">NT$ {{Math.round(element.amount * rate).toLocaleString()}}</p>
                                     </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="font-black text-sm" :class="element.type === 'income' ? 'text-orange-500' : 'text-gray-700'">
-                                        <i v-if="element.type !== 'income'" :class="element.method === '現金' ? 'fas fa-coins text-[10px] mr-1 opacity-40' : 'fas fa-credit-card text-[10px] mr-1 opacity-40'"></i>
-                                        {{element.type === 'income' ? '+' : '-'}} ₩ {{Number(element.amount).toLocaleString()}}
-                                    </p>
-                                    <p class="text-[10px] text-gray-300 font-bold">NT$ {{Math.round(element.amount * rate).toLocaleString()}}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-bold">{{element.payer}}</span>
+                                    <p v-if="element.note" class="text-[10px] text-gray-400 truncate flex-1">{{element.note}}</p>
                                 </div>
                             </div>
                         </div>
@@ -212,18 +217,20 @@
 
                 <div class="pt-6 border-t border-gray-100">
                     <h3 class="font-black text-gray-700 text-sm px-2 mb-4 uppercase tracking-widest">Memo / Links</h3>
-                    <draggable v-model="travelNotes" item-key="id" handle=".note-handle" :delay="150" @end="sync" class="space-y-3">
-                        <template #item="{element, index}">
-                            <div class="memo-item shadow-sm flex items-start gap-3">
-                                <div class="note-handle text-gray-200 mt-1 cursor-move px-2"><i class="fas fa-bars text-xs"></i></div>
-                                <div @click="openNoteEdit(index)" class="flex-1">
-                                    <p class="text-sm text-gray-600 whitespace-pre-wrap font-medium">{{element.content}}</p>
-                                    <a v-if="element.tag && element.tag.trim()" :href="element.tag" target="_blank" @click.stop class="text-[10px] teal-text font-bold mt-2 block break-all"><i class="fas fa-link mr-1"></i>{{element.tag}}</a>
+                    <div v-if="travelNotes && travelNotes.length > 0">
+                        <draggable v-model="travelNotes" item-key="id" handle=".note-handle" :delay="150" @end="sync" class="space-y-3">
+                            <template #item="{element, index}">
+                                <div class="memo-item shadow-sm flex items-start gap-3">
+                                    <div class="note-handle text-gray-200 mt-1 cursor-move px-2"><i class="fas fa-bars text-xs"></i></div>
+                                    <div @click="openNoteEdit(index)" class="flex-1">
+                                        <p class="text-sm text-gray-600 whitespace-pre-wrap font-medium">{{element.content}}</p>
+                                        <a v-if="element.tag && element.tag.trim()" :href="element.tag" target="_blank" @click.stop class="text-[10px] teal-text font-bold mt-2 block break-all"><i class="fas fa-link mr-1"></i>{{element.tag}}</a>
+                                    </div>
+                                    <button @click="deleteNote(index)" class="text-gray-200 text-xs"><i class="fas fa-times"></i></button>
                                 </div>
-                                <button @click="deleteNote(index)" class="text-gray-200 text-xs"><i class="fas fa-times"></i></button>
-                            </div>
-                        </template>
-                    </draggable>
+                            </template>
+                        </draggable>
+                    </div>
                     <button @click="openNoteAdd" class="w-full py-4 bg-teal-50 text-teal-600 rounded-[24px] font-bold mt-4">+ 新增 MEMO</button>
                 </div>
             </div>
@@ -360,13 +367,18 @@
                     const idx = this.shoppingList.findIndex(i => i.id === id);
                     if(idx > -1) {
                         this.shoppingList[idx].isBought = !this.shoppingList[idx].isBought;
-                        if(this.shoppingList[idx].isBought) {
-                            const cat = this.shoppingList[idx].category;
-                            const item = this.shoppingList.splice(idx, 1)[0];
+                        const item = this.shoppingList.splice(idx, 1)[0];
+                        if(item.isBought) {
+                            // 移到該類別的最下方
                             let lastIdx = -1;
-                            for(let i=0; i<this.shoppingList.length; i++){ if(this.shoppingList[i].category === cat) lastIdx = i; }
+                            for(let i=0; i<this.shoppingList.length; i++){ if(this.shoppingList[i].category === item.category) lastIdx = i; }
                             if(lastIdx === -1) this.shoppingList.push(item);
                             else this.shoppingList.splice(lastIdx + 1, 0, item);
+                        } else {
+                            // 移到該類別的最上方 (恢復原本位置)
+                            let firstIdx = this.shoppingList.findIndex(i => i.category === item.category);
+                            if(firstIdx === -1) this.shoppingList.push(item);
+                            else this.shoppingList.splice(firstIdx, 0, item);
                         }
                         this.sync(); 
                     } 
